@@ -1,0 +1,198 @@
+:root {
+  /* ==================== 色彩系统 ==================== */
+  
+  /* 主色调 */
+  --color-primary: hsl(217, 91%, 60%);
+  --color-primary-light: hsl(217, 91%, 70%);
+  --color-primary-dark: hsl(217, 91%, 50%);
+  --color-primary-alpha: hsla(217, 91%, 60%, 0.1);
+  
+  --color-success: hsl(142, 71%, 45%);
+  --color-success-light: hsl(142, 71%, 55%);
+  --color-success-alpha: hsla(142, 71%, 45%, 0.1);
+  
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warning-light: hsl(38, 92%, 60%);
+  --color-warning-alpha: hsla(38, 92%, 50%, 0.1);
+  
+  --color-error: hsl(0, 84%, 60%);
+  --color-error-light: hsl(0, 84%, 70%);
+  --color-error-alpha: hsla(0, 84%, 60%, 0.1);
+  
+  --color-info: hsl(188, 78%, 41%);
+  --color-info-light: hsl(188, 78%, 51%);
+  --color-info-alpha: hsla(188, 78%, 41%, 0.1);
+  
+  /* 中性色 */
+  --color-bg: hsl(220, 13%, 98%);
+  --color-bg-secondary: hsl(220, 13%, 95%);
+  --color-surface: hsl(0, 0%, 100%);
+  --color-border: hsl(220, 13%, 91%);
+  --color-border-light: hsl(220, 13%, 95%);
+  
+  --color-text-primary: hsl(220, 9%, 20%);
+  --color-text-secondary: hsl(220, 9%, 46%);
+  --color-text-tertiary: hsl(220, 9%, 60%);
+  --color-text-inverse: hsl(0, 0%, 100%);
+  
+  /* 渐变 */
+  --gradient-hero: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(188, 78%, 41%));
+  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  --gradient-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.05));
+  
+  /* ==================== 间距系统 ==================== */
+  --spacing-base: 8px;
+  --spacing-xs: calc(var(--spacing-base) * 0.5);   /* 4px */
+  --spacing-sm: var(--spacing-base);               /* 8px */
+  --spacing-md: calc(var(--spacing-base) * 1.5);   /* 12px */
+  --spacing-lg: calc(var(--spacing-base) * 2);     /* 16px */
+  --spacing-xl: calc(var(--spacing-base) * 3);     /* 24px */
+  --spacing-2xl: calc(var(--spacing-base) * 4);    /* 32px */
+  --spacing-3xl: calc(var(--spacing-base) * 6);    /* 48px */
+  --spacing-4xl: calc(var(--spacing-base) * 8);    /* 64px */
+  
+  /* ==================== 圆角系统 ==================== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-round: 50%;
+  --radius-pill: 9999px;
+  
+  /* ==================== 阴影系统 ==================== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.18);
+  
+  /* ==================== 动画系统 ==================== */
+  --duration-fast: 0.2s;
+  --duration-normal: 0.3s;
+  --duration-slow: 0.5s;
+  --easing: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ==================== 字体系统 ==================== */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+  --font-size-5xl: 48px;
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* ==================== 断点 ==================== */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
+  /* ==================== Z-Index ==================== */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* ==================== 全局样式 ==================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+}
+
+/* ==================== 工具类 ==================== */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-xl);
+  transition: all var(--duration-normal) var(--easing);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.gradient-text {
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==================== 滚动条样式 ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* ==================== 响应式辅助 ==================== */
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 14px;
+  }
+  
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .card {
+    padding: var(--spacing-lg);
+  }
+}

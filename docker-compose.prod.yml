@@ -1,0 +1,100 @@
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: server-monitor-mysql-prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - server-monitor-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 后端 API (生产环境)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: server-monitor-backend-prod
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    ports:
+      - "${BACKEND_PORT}:3001"
+    # 在 Linux 生产环境下，开启以下配置可获取宿主机真实信息
+    # Mac/Windows Docker Desktop 仍只能获取虚拟机信息
+    pid: host
+    privileged: true
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - server-monitor-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx (生产环境 - 提供前端静态文件和 API 代理)
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: server-monitor-nginx-prod
+    restart: always
+    ports:
+      - "${NGINX_PORT}:80"
+    volumes:
+      - frontend_build:/usr/share/nginx/html:ro
+    networks:
+      - server-monitor-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端构建（临时容器，仅用于构建）
+  frontend-builder:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: server-monitor-frontend-builder
+    volumes:
+      - frontend_build:/usr/share/nginx/html
+    command: sh -c "cp -r /usr/share/nginx/html/* /usr/share/nginx/html/"
+
+volumes:
+  mysql_data_prod:
+    driver: local
+  frontend_build:
+    driver: local
+
+networks:
+  server-monitor-network:
+    driver: bridge

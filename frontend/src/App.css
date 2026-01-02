@@ -1,0 +1,31 @@
+/* App 级别的全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 覆盖 Antd 的一些默认样式以匹配设计系统 */
+.ant-card {
+  transition: all var(--duration-normal) var(--easing);
+}
+
+.ant-progress-line {
+  transition: all var(--duration-normal) var(--easing);
+}
+
+.ant-tag {
+  border-radius: var(--radius-sm);
+}
+
+.ant-statistic-title {
+  margin-bottom: var(--spacing-sm);
+}
+
+.ant-statistic-content {
+  font-weight: var(--font-weight-semibold);
+}
