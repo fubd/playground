@@ -51,10 +51,28 @@ export interface SystemInfo {
 
 export class SystemService {
   constructor() {
+    let fsPrefix = process.env.FS_PREFIX;
+    
+    // 自动检测 /host 挂载点
+    if (!fsPrefix && fs.existsSync('/host/etc/os-release')) {
+      console.log('[System] Auto-detected host mount at /host');
+      fsPrefix = '/host';
+      // 回填环境变量以便后续使用
+      process.env.FS_PREFIX = fsPrefix;
+    }
+
     // 如果在 Docker 容器中并挂载了宿主机文件系统，告诉 systeminformation 读取宿主机信息
-    if (process.env.FS_PREFIX) {
+    if (fsPrefix) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (si as any).fs = process.env.FS_PREFIX;
+      (si as any).fs = fsPrefix;
+      console.log(`[System] Configured systeminformation with fs=${fsPrefix}`);
+    } else {
+      console.log('[System] No host mount detected (env:FS_PREFIX missing and /host/etc/os-release not found)');
+      if (fs.existsSync('/host')) {
+         console.log('[System] /host directory exists but os-release not found inside.');
+      } else {
+         console.log('[System] /host directory does not exist.');
+      }
     }
   }
 

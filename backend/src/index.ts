@@ -11,6 +11,7 @@ dotenv.config();
 const app = new Hono();
 
 // Debug Env
+console.log('--- Backend Service v2.2 (Auto-Detect Host) Starting ---');
 console.log('Environment Keys:', Object.keys(process.env).sort());
 console.log('FS_PREFIX value:', process.env.FS_PREFIX);
 
