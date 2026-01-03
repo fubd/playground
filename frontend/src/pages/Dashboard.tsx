@@ -1,19 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Progress, Statistic, Tag, Spin, Alert, Typography } from 'antd';
+import { Card, Row, Col, Progress, Statistic, Spin, Alert, Typography } from 'antd';
 import {
   CloudServerOutlined,
   HddOutlined,
   DatabaseOutlined,
-  ApiOutlined,
   ClockCircleOutlined,
   ThunderboltOutlined,
-  WindowsOutlined,
-  AppleOutlined,
-  CodeOutlined,
-  TagOutlined,
-  BuildOutlined,
-  LaptopOutlined,
-  GlobalOutlined,
 } from '@ant-design/icons';
 import { systemApi } from '../api/system';
 import type { SystemInfo } from '../types';
@@ -217,133 +209,7 @@ const Dashboard: React.FC = () => {
           </Col>
         </Row>
 
-        {/* CPU 信息 */}
-        <Card
-          title={
-            <span className="card-title">
-              <ThunderboltOutlined /> CPU 信息
-            </span>
-          }
-          className="info-card"
-          bordered={false}
-        >
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label">制造商</Text>
-                <Text strong>{systemInfo.cpu.manufacturer}</Text>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label">型号</Text>
-                <Text strong>{systemInfo.cpu.brand}</Text>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label">主频</Text>
-                <Text strong>{systemInfo.cpu.speed} GHz</Text>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label">CPU核心</Text>
-                <Text strong>{systemInfo.cpu.processors}</Text>
-              </div>
-            </Col>
-          </Row>
-        </Card>
 
-        {/* 操作系统信息 */}
-        <Card
-          title={
-            <span className="card-title">
-              <CloudServerOutlined /> 操作系统
-            </span>
-          }
-          className="info-card"
-          bordered={false}
-        >
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label"><GlobalOutlined /> 平台</Text>
-                <Tag color="blue">{systemInfo.os.platform}</Tag>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label"><CodeOutlined /> 发行版</Text>
-                <Text strong>{systemInfo.os.distro}</Text>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label"><TagOutlined /> 版本</Text>
-                <Text strong>{systemInfo.os.release}</Text>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="info-item">
-                <Text className="info-label"><BuildOutlined /> 架构</Text>
-                <Tag color="green">{systemInfo.os.arch}</Tag>
-              </div>
-            </Col>
-            <Col xs={24}>
-              <div className="info-item">
-                <Text className="info-label"><LaptopOutlined /> 主机名</Text>
-                <Text strong code>{systemInfo.os.hostname}</Text>
-              </div>
-            </Col>
-          </Row>
-        </Card>
-
-        {/* 网络接口 */}
-        <Card
-          title={
-            <span className="card-title">
-              <ApiOutlined /> 网络接口
-            </span>
-          }
-          className="info-card"
-          bordered={false}
-        >
-          <Row gutter={[16, 16]}>
-            {systemInfo.network.map((net, index) => (
-              <Col xs={24} md={12} key={index}>
-                <Card className="network-card" size="small">
-                  <div className="network-header">
-                    <Text strong>{net.iface}</Text>
-                    {net.speed > 0 && (
-                      <Tag color="cyan">{net.speed} Mbps</Tag>
-                    )}
-                  </div>
-                  <div className="network-info">
-                    {net.ip4 && (
-                      <div className="network-item">
-                        <Text type="secondary">IPv4:</Text>
-                        <Text code>{net.ip4}</Text>
-                      </div>
-                    )}
-                    {net.ip6 && (
-                      <div className="network-item">
-                        <Text type="secondary">IPv6:</Text>
-                        <Text code className="network-ipv6">{net.ip6}</Text>
-                      </div>
-                    )}
-                    {net.mac && (
-                      <div className="network-item">
-                        <Text type="secondary">MAC:</Text>
-                        <Text code>{net.mac}</Text>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Card>
       </div>
     </div>
   );
