@@ -1,8 +1,10 @@
 import { Hono } from 'hono';
 import { SystemService } from '../services/system.service.js';
+import { MetricsService } from '../services/metrics.service.js';
 
 const systemRouter = new Hono();
 const systemService = new SystemService();
+const metricsService = new MetricsService();
 
 systemRouter.get('/system-info', async (c) => {
   try {
@@ -17,6 +19,16 @@ systemRouter.get('/system-info', async (c) => {
       },
       500
     );
+  }
+});
+
+systemRouter.get('/metrics/history', async (c) => {
+  try {
+    const history = await metricsService.getHistory();
+    return c.json(history);
+  } catch (error) {
+    console.error('Error in /metrics/history:', error);
+    return c.json({ error: 'Failed to fetch metrics history' }, 500);
   }
 });
 

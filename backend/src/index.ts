@@ -5,6 +5,8 @@ import { logger } from 'hono/logger';
 import dotenv from 'dotenv';
 import systemRouter from './routes/system.routes.js';
 import { testDbConnection } from './db/connection.js';
+import { SystemService } from './services/system.service.js';
+import { MetricsService } from './services/metrics.service.js';
 
 dotenv.config();
 
@@ -62,9 +64,34 @@ console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`🔌 Port: ${port}`);
 
 // 测试数据库连接（可选）
-testDbConnection().then((connected) => {
+// ... imports
+
+// 测试数据库连接（可选）
+testDbConnection().then(async (connected) => {
   if (connected) {
     console.log('✓ Database is ready');
+    
+    // 初始化指标服务
+    const systemService = new SystemService();
+    const metricsService = new MetricsService();
+    
+    await metricsService.initTable();
+    console.log('✓ Metrics table checked/initialized');
+
+    // 启动 10s 定时采集
+    setInterval(async () => {
+      try {
+        const info = await systemService.getSystemInfo();
+        await metricsService.saveMetric(
+          info.currentLoad.currentLoad,
+          info.memory.usedPercent
+        );
+      } catch (e) {
+        console.error('Error collecting metrics:', e);
+      }
+    }, 10000);
+    console.log('✓ Metrics collection started (10s interval)');
+
   } else {
     console.log('⚠️  Database is not available (will continue without it)');
   }

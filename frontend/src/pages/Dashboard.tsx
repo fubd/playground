@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { systemApi } from '../api/system';
 import type { SystemInfo } from '../types';
+import HistoryChart from '../components/HistoryChart';
 import './Dashboard.css';
 
 const { Title, Text } = Typography;
@@ -209,7 +210,8 @@ const Dashboard: React.FC = () => {
           </Col>
         </Row>
 
-
+        {/* 历史趋势图 */}
+        <HistoryChart />
       </div>
     </div>
   );
