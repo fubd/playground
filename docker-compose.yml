@@ -38,11 +38,16 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      FS_PREFIX: /host
     ports:
       - "${BACKEND_PORT}:3001"
+    # Enable accessing host metrics in Dev
+    pid: host
+    privileged: true
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/package.json:/app/package.json:ro
+      - /:/host:ro,rslave
     networks:
       - server-monitor-network
     depends_on:
