@@ -22,11 +22,13 @@ const HistoryChart: React.FC = () => {
   const fetchData = async () => {
     try {
       console.log('Fetching history data...');
-      const res = await apiClient.get<Metric[]>('/metrics/history');
-      console.log('History data received:', res.data);
+      // The interceptor returns response.data, so the result IS the data (Metric[])
+      // We cast to Metric[] to satisfy TypeScript forcing AxiosResponse
+      const res = await apiClient.get<Metric[]>('/metrics/history') as unknown as Metric[];
+      console.log('History data received:', res);
       if (isMounted.current) {
         // Take last 60 points if needed, though backend limits to 1 hour
-        setData(res.data);
+        setData(res);
         setError(null);
       }
     } catch (err) {
