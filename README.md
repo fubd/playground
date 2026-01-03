@@ -74,8 +74,8 @@ make prod-down
 ├── backend/           # Hono.js 后端
 ├── database/          # 数据库初始化脚本
 ├── nginx/             # Nginx 配置
-├── docker-compose.yml # 开发环境配置
-├── docker-compose.prod.yml # 生产环境配置
+├── docker compose.yml # 开发环境配置
+├── docker compose.prod.yml # 生产环境配置
 └── Makefile          # 自动化命令
 ```
 

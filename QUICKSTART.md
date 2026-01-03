@@ -9,7 +9,7 @@
 make dev-up
 
 # 方式2: 直接使用 Docker Compose
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 2. 查看服务状态
@@ -17,7 +17,7 @@ docker-compose up -d
 ```bash
 make status
 # 或
-docker-compose ps
+docker compose ps
 ```
 
 ### 3. 访问应用
@@ -35,9 +35,9 @@ docker-compose ps
 make dev-logs
 
 # 查看特定服务日志
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f mysql
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f mysql
 ```
 
 ### 5. 停止环境
@@ -45,7 +45,7 @@ docker-compose logs -f mysql
 ```bash
 make dev-down
 # 或
-docker-compose down
+docker compose down
 ```
 
 ---
@@ -101,7 +101,7 @@ make prod-up
 这是正常现象。
 
 1.  **Mac / Windows**: Docker 运行在一个轻量级 Linux 虚拟机中（通常是 Alpine Linux）。后端服务获取的是这个虚拟机的信息，无法穿透获取宿主机（macOS/Windows）的硬件信息。
-2.  **Linux 服务器**: 在生产环境部署时，我们已在 `docker-compose.prod.yml` 中配置了 `pid: host` 和 `privileged: true`。这允许容器访问宿主机的 `/proc` 文件系统，从而获取真实的宿主机 CPU、内存和磁盘信息。
+2.  **Linux 服务器**: 在生产环境部署时，我们已在 `docker compose.prod.yml` 中配置了 `pid: host` 和 `privileged: true`。这允许容器访问宿主机的 `/proc` 文件系统，从而获取真实的宿主机 CPU、内存和磁盘信息。
 
 ### 端口被占用
 
@@ -118,7 +118,7 @@ NGINX_PORT=26033     # 修改为其他端口
 
 ```bash
 # 查看详细日志
-docker-compose logs
+docker compose logs
 
 # 重建容器
 make dev-rebuild
@@ -128,7 +128,7 @@ make dev-rebuild
 
 1. 确保 MySQL 容器已完全启动
 2. 检查 `.env` 中的数据库配置
-3. 查看后端日志：`docker-compose logs backend`
+3. 查看后端日志：`docker compose logs backend`
 
 ### 前端无法连接后端
 

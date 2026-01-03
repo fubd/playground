@@ -32,7 +32,7 @@ help:
 
 dev-up:
 	@echo "🚀 启动开发环境..."
-	docker-compose up -d
+	docker compose up -d
 	@echo "✓ 开发环境已启动"
 	@echo "📍 前端: http://localhost:26030"
 	@echo "📍 后端: http://localhost:26031"
@@ -40,29 +40,29 @@ dev-up:
 
 dev-down:
 	@echo "🛑 停止开发环境..."
-	docker-compose down
+	docker compose down
 	@echo "✓ 开发环境已停止"
 
 dev-logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 dev-rebuild:
 	@echo "🔨 重建开发环境..."
-	docker-compose down
-	docker-compose build --no-cache
-	docker-compose up -d
+	docker compose down
+	docker compose build --no-cache
+	docker compose up -d
 	@echo "✓ 开发环境重建完成"
 
 dev-restart:
 	@echo "🔄 重启开发环境服务..."
-	docker-compose restart
+	docker compose restart
 	@echo "✓ 服务已重启"
 
 # ==================== 生产环境 ====================
 
 prod-up:
 	@echo "🚀 启动生产环境..."
-	docker-compose -f docker-compose.prod.yml up -d
+	docker compose -f docker compose.prod.yml up -d
 	@echo "✓ 生产环境已启动"
 	@echo "📍 Nginx (统一入口): http://localhost:26033"
 	@echo "📍 后端 API: http://localhost:26031"
@@ -70,22 +70,22 @@ prod-up:
 
 prod-down:
 	@echo "🛑 停止生产环境..."
-	docker-compose -f docker-compose.prod.yml down
+	docker compose -f docker compose.prod.yml down
 	@echo "✓ 生产环境已停止"
 
 prod-logs:
-	docker-compose -f docker-compose.prod.yml logs -f
+	docker compose -f docker compose.prod.yml logs -f
 
 prod-rebuild:
 	@echo "🔨 重建生产环境..."
-	docker-compose -f docker-compose.prod.yml down
-	docker-compose -f docker-compose.prod.yml build --no-cache
-	docker-compose -f docker-compose.prod.yml up -d
+	docker compose -f docker compose.prod.yml down
+	docker compose -f docker compose.prod.yml build --no-cache
+	docker compose -f docker compose.prod.yml up -d
 	@echo "✓ 生产环境重建完成"
 
 prod-restart:
 	@echo "🔄 重启生产环境服务..."
-	docker-compose -f docker-compose.prod.yml restart
+	docker compose -f docker compose.prod.yml restart
 	@echo "✓ 服务已重启"
 
 # ==================== 数据库操作 ====================
@@ -124,8 +124,8 @@ clean:
 	@read -p "⚠️  这将删除所有容器、卷和数据。确定继续？(y/N) " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		docker-compose down -v --rmi all; \
-		docker-compose -f docker-compose.prod.yml down -v --rmi all; \
+		docker compose down -v --rmi all; \
+		docker compose -f docker compose.prod.yml down -v --rmi all; \
 		echo "✓ 清理完成"; \
 	else \
 		echo "❌ 已取消"; \
@@ -133,7 +133,7 @@ clean:
 
 status:
 	@echo "📊 服务状态:"
-	@docker-compose ps
+	@docker compose ps
 	@echo ""
 	@echo "📊 生产环境状态:"
-	@docker-compose -f docker-compose.prod.yml ps
+	@docker compose -f docker compose.prod.yml ps
