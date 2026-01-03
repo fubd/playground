@@ -48,9 +48,17 @@ export interface SystemInfo {
 }
 
 export class SystemService {
+  constructor() {
+    // 如果在 Docker 容器中并挂载了宿主机文件系统，告诉 systeminformation 读取宿主机信息
+    if (process.env.FS_PREFIX) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (si as any).fs = process.env.FS_PREFIX;
+    }
+  }
+
   async getSystemInfo(): Promise<SystemInfo> {
     try {
-      const [cpu, memory, osInfo, currentLoad, fsSize, networkInterfaces] =
+      const [cpu, memory, osInfo, currentLoad, fsSize, networkInterfaces, time] =
         await Promise.all([
           si.cpu(),
           si.mem(),
@@ -58,6 +66,7 @@ export class SystemService {
           si.currentLoad(),
           si.fsSize(),
           si.networkInterfaces(),
+          si.time(),
         ]);
 
       return {
@@ -81,7 +90,7 @@ export class SystemService {
           release: osInfo.release,
           arch: osInfo.arch,
           hostname: osInfo.hostname,
-          uptime: osInfo.uptime,
+          uptime: time.uptime,
         },
         disk: fsSize.map((disk) => ({
           fs: disk.fs,

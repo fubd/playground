@@ -7,6 +7,13 @@ import {
   ApiOutlined,
   ClockCircleOutlined,
   ThunderboltOutlined,
+  WindowsOutlined,
+  AppleOutlined,
+  CodeOutlined,
+  TagOutlined,
+  BuildOutlined,
+  LaptopOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { systemApi } from '../api/system';
 import type { SystemInfo } from '../types';
@@ -175,12 +182,37 @@ const Dashboard: React.FC = () => {
               <Statistic
                 title={
                   <span className="stat-title">
-                    <ApiOutlined /> CPU 核心
+                    <HddOutlined /> 磁盘使用
                   </span>
                 }
-                value={systemInfo.cpu.cores}
-                suffix={`/ ${systemInfo.cpu.physicalCores} 物理核心`}
+                value={(() => {
+                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
+                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
+                  return total > 0 ? ((used / total) * 100).toFixed(2) : '0.00';
+                })()}
+                suffix="%"
               />
+              <Progress
+                percent={Number((() => {
+                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
+                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
+                  return total > 0 ? ((used / total) * 100).toFixed(2) : 0;
+                })())}
+                strokeColor={getProgressColor(Number((() => {
+                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
+                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
+                  return total > 0 ? ((used / total) * 100).toFixed(2) : 0;
+                })()))}
+                showInfo={false}
+                className="stat-progress"
+              />
+              <Text type="secondary" className="stat-detail">
+                {(() => {
+                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
+                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
+                  return `${formatBytes(used)} / ${formatBytes(total)}`;
+                })()}
+              </Text>
             </Card>
           </Col>
         </Row>
@@ -216,7 +248,7 @@ const Dashboard: React.FC = () => {
             </Col>
             <Col xs={24} md={12}>
               <div className="info-item">
-                <Text className="info-label">处理器数量</Text>
+                <Text className="info-label">CPU核心</Text>
                 <Text strong>{systemInfo.cpu.processors}</Text>
               </div>
             </Col>
@@ -236,67 +268,35 @@ const Dashboard: React.FC = () => {
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <div className="info-item">
-                <Text className="info-label">平台</Text>
+                <Text className="info-label"><GlobalOutlined /> 平台</Text>
                 <Tag color="blue">{systemInfo.os.platform}</Tag>
               </div>
             </Col>
             <Col xs={24} md={12}>
               <div className="info-item">
-                <Text className="info-label">发行版</Text>
+                <Text className="info-label"><CodeOutlined /> 发行版</Text>
                 <Text strong>{systemInfo.os.distro}</Text>
               </div>
             </Col>
             <Col xs={24} md={12}>
               <div className="info-item">
-                <Text className="info-label">版本</Text>
+                <Text className="info-label"><TagOutlined /> 版本</Text>
                 <Text strong>{systemInfo.os.release}</Text>
               </div>
             </Col>
             <Col xs={24} md={12}>
               <div className="info-item">
-                <Text className="info-label">架构</Text>
+                <Text className="info-label"><BuildOutlined /> 架构</Text>
                 <Tag color="green">{systemInfo.os.arch}</Tag>
               </div>
             </Col>
             <Col xs={24}>
               <div className="info-item">
-                <Text className="info-label">主机名</Text>
+                <Text className="info-label"><LaptopOutlined /> 主机名</Text>
                 <Text strong code>{systemInfo.os.hostname}</Text>
               </div>
             </Col>
           </Row>
-        </Card>
-
-        {/* 磁盘信息 */}
-        <Card
-          title={
-            <span className="card-title">
-              <HddOutlined /> 磁盘使用
-            </span>
-          }
-          className="info-card"
-          bordered={false}
-        >
-          {systemInfo.disk.map((disk, index) => (
-            <div key={index} className="disk-item">
-              <div className="disk-header">
-                <Text strong>{disk.mount}</Text>
-                <Text type="secondary">
-                  {formatBytes(disk.used)} / {formatBytes(disk.size)}
-                </Text>
-              </div>
-              <Progress
-                percent={Number(disk.usePercent.toFixed(2))}
-                strokeColor={getProgressColor(disk.usePercent)}
-                className="disk-progress"
-              />
-              <div className="disk-footer">
-                <Tag>{disk.fs}</Tag>
-                <Tag>{disk.type}</Tag>
-                <Text type="secondary">可用: {formatBytes(disk.available)}</Text>
-              </div>
-            </div>
-          ))}
         </Card>
 
         {/* 网络接口 */}

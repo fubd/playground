@@ -37,7 +37,9 @@ services:
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      FS_PREFIX: /host
     ports:
       - "${BACKEND_PORT}:3001"
     # 在 Linux 生产环境下，开启以下配置可获取宿主机真实信息
