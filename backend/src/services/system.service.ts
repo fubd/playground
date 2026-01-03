@@ -61,11 +61,12 @@ export class SystemService {
         disk: fsSize
           .filter((disk) => {
              // Filter out virtual and pseudo filesystems
-             if (['overlay', 'tmpfs', 'devtmpfs', 'squashfs', 'iso9660', 'devfs', 'autofs'].includes(disk.type)) {
+             // We allow 'overlay' now to support container monitoring in Dev/Docker
+             if (['tmpfs', 'devtmpfs', 'squashfs', 'iso9660', 'devfs', 'autofs'].includes(disk.type)) {
                return false;
              }
              // Filter out Docker specific mounts or small loop devices if necessary
-             if (disk.mount.startsWith('/var/lib/docker') || disk.mount.startsWith('/run')) {
+             if (disk.mount.startsWith('/run')) {
                return false;
              }
              
