@@ -10,6 +10,8 @@ const apiClient = axios.create({
   },
 });
 
+console.log('🔌 API_BASE_URL configured as:', API_BASE_URL);
+
 // 请求拦截器
 apiClient.interceptors.request.use(
   (config) => {
