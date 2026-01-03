@@ -1,30 +1,13 @@
 import si from 'systeminformation';
-import fs from 'fs';
-import path from 'path';
 
 export interface SystemInfo {
-  cpu: {
-    manufacturer: string;
-    brand: string;
-    speed: number;
-    cores: number;
-    physicalCores: number;
-    processors: number;
-  };
   memory: {
     total: number;
     free: number;
     used: number;
     usedPercent: number;
   };
-  os: {
-    platform: string;
-    distro: string;
-    release: string;
-    arch: string;
-    hostname: string;
-    uptime: number;
-  };
+  uptime: number;
   disk: Array<{
     fs: string;
     type: string;
@@ -33,13 +16,6 @@ export interface SystemInfo {
     available: number;
     usePercent: number;
     mount: string;
-  }>;
-  network: Array<{
-    iface: string;
-    ip4: string;
-    ip6: string;
-    mac: string;
-    speed: number;
   }>;
   currentLoad: {
     avgLoad: number;
@@ -51,70 +27,37 @@ export interface SystemInfo {
 
 export class SystemService {
   constructor() {
-    let fsPrefix = process.env.FS_PREFIX;
-    
-    // 自动检测 /host 挂载点
-    if (!fsPrefix && fs.existsSync('/host/etc/os-release')) {
-      console.log('[System] Auto-detected host mount at /host');
-      fsPrefix = '/host';
-      // 回填环境变量以便后续使用
-      process.env.FS_PREFIX = fsPrefix;
-    }
-
     // 如果在 Docker 容器中并挂载了宿主机文件系统，告诉 systeminformation 读取宿主机信息
-    if (fsPrefix) {
+    if (process.env.FS_PREFIX) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (si as any).fs = fsPrefix;
-      console.log(`[System] Configured systeminformation with fs=${fsPrefix}`);
-    } else {
-      console.log('[System] No host mount detected (env:FS_PREFIX missing and /host/etc/os-release not found)');
-      if (fs.existsSync('/host')) {
-         console.log('[System] /host directory exists but os-release not found inside.');
-      } else {
-         console.log('[System] /host directory does not exist.');
-      }
-    }
+      (si as any).fs = process.env.FS_PREFIX;
+      console.log(`[System] Configured systeminformation with fs=${process.env.FS_PREFIX}`);
+    } 
+    // 自动探测逻辑可以简化或移除，既然不再需要 OS Distro 信息，
+    // 其实 FS_PREFIX 仅对 CPU/Uptime 等内核信息有辅助作用 (pid:host 已解决大部分),
+    // 但 fsSize 仍然主要靠 mount。既然用户说只要 "CPU负载、内存、运行时间、磁盘"，
+    // 实际上大部分数据不依赖 /etc/os-release 了。
+    // 但是 FS_PREFIX 对 fsSize (df command) 的准确性可能有帮助，保留基本配置即可。
   }
 
   async getSystemInfo(): Promise<SystemInfo> {
     try {
-      // 尝试手动获取宿主机的 OS 信息作为后备/覆盖
-      const hostOsInfo = await this.getHostOsInfo();
-      
-      const [cpu, memory, osInfo, currentLoad, fsSize, networkInterfaces, time] =
+      const [memory, currentLoad, fsSize, time] =
         await Promise.all([
-          si.cpu(),
           si.mem(),
-          si.osInfo(),
           si.currentLoad(),
           si.fsSize(),
-          si.networkInterfaces(),
           si.time(),
         ]);
 
       return {
-        cpu: {
-          manufacturer: cpu.manufacturer,
-          brand: cpu.brand,
-          speed: cpu.speed,
-          cores: cpu.cores,
-          physicalCores: cpu.physicalCores,
-          processors: cpu.processors,
-        },
         memory: {
           total: memory.total,
           free: memory.free,
           used: memory.used,
           usedPercent: (memory.used / memory.total) * 100,
         },
-        os: {
-          platform: osInfo.platform,
-          distro: hostOsInfo?.distro || osInfo.distro,
-          release: hostOsInfo?.release || osInfo.release,
-          arch: osInfo.arch,
-          hostname: osInfo.hostname,
-          uptime: time.uptime,
-        },
+        uptime: time.uptime,
         disk: fsSize.map((disk) => ({
           fs: disk.fs,
           type: disk.type,
@@ -124,15 +67,6 @@ export class SystemService {
           usePercent: disk.use,
           mount: disk.mount,
         })),
-        network: networkInterfaces
-          .filter((net) => !net.internal && net.ip4)
-          .map((net) => ({
-            iface: net.iface,
-            ip4: net.ip4,
-            ip6: net.ip6,
-            mac: net.mac,
-            speed: net.speed || 0,
-          })),
         currentLoad: {
           avgLoad: currentLoad.avgLoad,
           currentLoad: currentLoad.currentLoad,
@@ -144,63 +78,5 @@ export class SystemService {
       console.error('Error fetching system info:', error);
       throw new Error('Failed to fetch system information');
     }
-  }
-
-
-  private async getHostOsInfo(): Promise<{ distro: string; release: string } | null> {
-    const fsPrefix = process.env.FS_PREFIX;
-    console.log('[Debug] FS_PREFIX:', fsPrefix);
-    
-    if (!fsPrefix) {
-      console.log('[Debug] FS_PREFIX is not set, skipping host OS parsing');
-      return null;
-    }
-
-    try {
-      const osReleasePath = path.join(fsPrefix, 'etc/os-release');
-      console.log('[Debug] Checking os-release at:', osReleasePath);
-      
-      if (fs.existsSync(osReleasePath)) {
-        console.log('[Debug] File exists, reading...');
-        const content = fs.readFileSync(osReleasePath, 'utf8');
-        console.log('[Debug] Content length:', content.length);
-        
-        const lines = content.split('\n');
-        let distro = '';
-        let release = '';
-
-        lines.forEach(line => {
-          if (line.startsWith('PRETTY_NAME=')) {
-            distro = line.split('=')[1].replace(/"/g, '');
-          } else if (line.startsWith('NAME=') && !distro) {
-             distro = line.split('=')[1].replace(/"/g, '');
-          }
-          
-          if (line.startsWith('VERSION_ID=')) {
-            release = line.split('=')[1].replace(/"/g, '');
-          }
-        });
-
-        console.log(`[Debug] Parsed: distro=${distro}, release=${release}`);
-
-        if (distro) {
-          console.log(`✓ Manually parsed host OS: ${distro} ${release}`);
-          return { distro, release };
-        }
-      } else {
-        console.log(`[Debug] File does not exist at ${osReleasePath}`);
-        // List directory to see what is there
-        try {
-          const dir = path.dirname(osReleasePath);
-          const files = fs.readdirSync(dir);
-          console.log(`[Debug] Files in ${dir}:`, files.slice(0, 10)); // list first 10
-        } catch (e) {
-          console.log(`[Debug] Cannot list directory:`, e);
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to parse host os-release:', error);
-    }
-    return null;
   }
 }

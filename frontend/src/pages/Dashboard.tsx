@@ -163,7 +163,7 @@ const Dashboard: React.FC = () => {
                     <ClockCircleOutlined /> 运行时间
                   </span>
                 }
-                value={formatUptime(systemInfo?.os?.uptime || 0)}
+                value={formatUptime(systemInfo?.uptime || 0)}
                 valueStyle={{ fontSize: '16px' }}
               />
             </Card>
