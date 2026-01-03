@@ -10,6 +10,10 @@ dotenv.config();
 
 const app = new Hono();
 
+// Debug Env
+console.log('Environment Keys:', Object.keys(process.env).sort());
+console.log('FS_PREFIX value:', process.env.FS_PREFIX);
+
 // 中间件
 app.use('*', logger());
 app.use(
