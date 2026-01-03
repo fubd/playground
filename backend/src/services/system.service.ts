@@ -1,4 +1,6 @@
 import si from 'systeminformation';
+import fs from 'fs';
+import path from 'path';
 
 export interface SystemInfo {
   cpu: {
@@ -58,6 +60,9 @@ export class SystemService {
 
   async getSystemInfo(): Promise<SystemInfo> {
     try {
+      // 尝试手动获取宿主机的 OS 信息作为后备/覆盖
+      const hostOsInfo = await this.getHostOsInfo();
+      
       const [cpu, memory, osInfo, currentLoad, fsSize, networkInterfaces, time] =
         await Promise.all([
           si.cpu(),
@@ -86,8 +91,8 @@ export class SystemService {
         },
         os: {
           platform: osInfo.platform,
-          distro: osInfo.distro,
-          release: osInfo.release,
+          distro: hostOsInfo?.distro || osInfo.distro,
+          release: hostOsInfo?.release || osInfo.release,
           arch: osInfo.arch,
           hostname: osInfo.hostname,
           uptime: time.uptime,
@@ -121,5 +126,40 @@ export class SystemService {
       console.error('Error fetching system info:', error);
       throw new Error('Failed to fetch system information');
     }
+  }
+
+
+  private async getHostOsInfo(): Promise<{ distro: string; release: string } | null> {
+    if (!process.env.FS_PREFIX) return null;
+
+    try {
+      const osReleasePath = path.join(process.env.FS_PREFIX, 'etc/os-release');
+      if (fs.existsSync(osReleasePath)) {
+        const content = fs.readFileSync(osReleasePath, 'utf8');
+        const lines = content.split('\n');
+        let distro = '';
+        let release = '';
+
+        lines.forEach(line => {
+          if (line.startsWith('PRETTY_NAME=')) {
+            distro = line.split('=')[1].replace(/"/g, '');
+          } else if (line.startsWith('NAME=') && !distro) {
+             distro = line.split('=')[1].replace(/"/g, '');
+          }
+          
+          if (line.startsWith('VERSION_ID=')) {
+            release = line.split('=')[1].replace(/"/g, '');
+          }
+        });
+
+        if (distro) {
+          console.log(`✓ Manually parsed host OS: ${distro} ${release}`);
+          return { distro, release };
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to parse host os-release:', error);
+    }
+    return null;
   }
 }

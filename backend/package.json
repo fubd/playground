@@ -10,13 +10,19 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["hono", "server-monitor", "systeminformation"],
+  "keywords": [
+    "hono",
+    "server-monitor",
+    "systeminformation"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@hono/node-server": "^1.19.7",
+    "@types/fs-extra": "^11.0.4",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "fs-extra": "^11.3.3",
     "hono": "^4.11.3",
     "mysql2": "^3.16.0",
     "systeminformation": "^5.28.9"
