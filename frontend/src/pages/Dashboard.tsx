@@ -94,20 +94,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="dashboard">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <div className="hero-content">
-          <CloudServerOutlined className="hero-icon" />
-          <Title level={1} className="hero-title gradient-text">
-            服务器监控仪表板
-          </Title>
-          <Text className="hero-subtitle">
-            实时监控您的服务器性能和资源使用情况
-          </Text>
-        </div>
-      </div>
-
+    <div className="dashboard" style={{padding: 24}}>
       <div className="dashboard-content container">
         {/* 系统概览 */}
         <Row gutter={[24, 24]}>
