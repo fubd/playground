@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Progress, Statistic, Spin, Alert, Typography } from 'antd';
 import {
-  CloudServerOutlined,
   HddOutlined,
   DatabaseOutlined,
   ClockCircleOutlined,
@@ -12,7 +11,7 @@ import type { SystemInfo } from '../types';
 import HistoryChart from '../components/HistoryChart';
 import './Dashboard.css';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const Dashboard: React.FC = () => {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -94,7 +93,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="dashboard" style={{padding: 24}}>
+    <div className="dashboard" style={{ padding: 24 }}>
       <div className="dashboard-content container">
         {/* 系统概览 */}
         <Row gutter={[24, 24]}>
