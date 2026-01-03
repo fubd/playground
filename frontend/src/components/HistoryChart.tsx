@@ -21,11 +21,9 @@ const HistoryChart: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      console.log('Fetching history data...');
       // The interceptor returns response.data, so the result IS the data (Metric[])
       // We cast to Metric[] to satisfy TypeScript forcing AxiosResponse
       const res = await apiClient.get<Metric[]>('/metrics/history') as unknown as Metric[];
-      console.log('History data received:', res);
       if (isMounted.current) {
         // Take last 60 points if needed, though backend limits to 1 hour
         setData(res);
@@ -121,6 +119,9 @@ const HistoryChart: React.FC = () => {
           itemStyle: {
             color: '#1890ff',
           },
+          tooltip: {
+            valueFormatter: (value: number) => value.toFixed(2)
+          },
           data: data.map((item) => item.cpu_load),
         },
         {
@@ -134,6 +135,9 @@ const HistoryChart: React.FC = () => {
           },
           itemStyle: {
             color: '#52c41a',
+          },
+          tooltip: {
+            valueFormatter: (value: number) => value.toFixed(2)
           },
           data: data.map((item) => item.memory_usage),
         },
