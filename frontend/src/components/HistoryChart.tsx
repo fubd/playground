@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Card, Alert } from 'antd';
 import { LineChartOutlined } from '@ant-design/icons';
-import { apiClient } from '../api/client';
+import apiClient from '../api/client';
 
 export interface Metric {
   id: number;
