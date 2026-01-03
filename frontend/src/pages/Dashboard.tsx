@@ -179,31 +179,31 @@ const Dashboard: React.FC = () => {
                   </span>
                 }
                 value={(() => {
-                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
-                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
-                  return total > 0 ? ((used / total) * 100).toFixed(2) : '0.00';
+                  const mainDisk = systemInfo.disk.find(d => d.mount === '/' || d.mount === '/host') || systemInfo.disk[0];
+                  if (!mainDisk) return '0.00';
+                  return ((mainDisk.used / mainDisk.size) * 100).toFixed(2);
                 })()}
                 suffix="%"
               />
               <Progress
                 percent={Number((() => {
-                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
-                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
-                  return total > 0 ? ((used / total) * 100).toFixed(2) : 0;
+                  const mainDisk = systemInfo.disk.find(d => d.mount === '/' || d.mount === '/host') || systemInfo.disk[0];
+                  if (!mainDisk) return 0;
+                  return ((mainDisk.used / mainDisk.size) * 100).toFixed(2);
                 })())}
                 strokeColor={getProgressColor(Number((() => {
-                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
-                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
-                  return total > 0 ? ((used / total) * 100).toFixed(2) : 0;
+                  const mainDisk = systemInfo.disk.find(d => d.mount === '/' || d.mount === '/host') || systemInfo.disk[0];
+                  if (!mainDisk) return 0;
+                  return ((mainDisk.used / mainDisk.size) * 100).toFixed(2);
                 })()))}
                 showInfo={false}
                 className="stat-progress"
               />
               <Text type="secondary" className="stat-detail">
                 {(() => {
-                  const used = systemInfo.disk.reduce((acc, curr) => acc + curr.used, 0);
-                  const total = systemInfo.disk.reduce((acc, curr) => acc + curr.size, 0);
-                  return `${formatBytes(used)} / ${formatBytes(total)}`;
+                  const mainDisk = systemInfo.disk.find(d => d.mount === '/' || d.mount === '/host') || systemInfo.disk[0];
+                  if (!mainDisk) return '0 B / 0 B';
+                  return `${formatBytes(mainDisk.used)} / ${formatBytes(mainDisk.size)}`;
                 })()}
               </Text>
             </Card>
