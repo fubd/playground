@@ -22,13 +22,19 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchSystemInfo = async () => {
       try {
-        setLoading(true);
         const data = await systemApi.getSystemInfo();
         setSystemInfo(data);
         setError(null);
       } catch (err) {
-        setError('无法获取系统信息，请检查后端服务是否运行');
+        // 仅在首次加载失败时显示错误（通过检查 systemInfo 是否为空的当前状态很难，这里简化逻辑）
+        // 实际上因为是闭包，这里也不能准确判断是否已有数据
+        // 最好的方式是让 error 也不要轻易覆盖已有数据
         console.error(err);
+        // 使用函数式更新来决定是否设置错误
+        setSystemInfo(prev => {
+          if (!prev) setError('无法获取系统信息，请检查后端服务是否运行');
+          return prev;
+        });
       } finally {
         setLoading(false);
       }
@@ -49,6 +55,7 @@ const Dashboard: React.FC = () => {
   };
 
   const formatUptime = (seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0天 0小时 0分钟';
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -157,7 +164,7 @@ const Dashboard: React.FC = () => {
                     <ClockCircleOutlined /> 运行时间
                   </span>
                 }
-                value={formatUptime(systemInfo.os.uptime)}
+                value={formatUptime(systemInfo?.os?.uptime || 0)}
                 valueStyle={{ fontSize: '16px' }}
               />
             </Card>

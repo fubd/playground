@@ -67,6 +67,7 @@
   box-shadow: var(--shadow-sm) !important;
   transition: all var(--duration-normal) var(--easing) !important;
   border: 1px solid var(--color-border-light) !important;
+  height: 100%;
 }
 
 .stat-card:hover {
@@ -100,6 +101,7 @@
   box-shadow: var(--shadow-sm) !important;
   border: 1px solid var(--color-border-light) !important;
   transition: all var(--duration-normal) var(--easing) !important;
+  height: 100%;
 }
 
 .info-card:hover {
