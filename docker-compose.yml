@@ -47,7 +47,7 @@ services:
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/package.json:/app/package.json:ro
-      - /:/host:ro,rslave
+      - /:/host:ro
     networks:
       - server-monitor-network
     depends_on:

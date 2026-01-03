@@ -58,7 +58,27 @@ export class SystemService {
           usedPercent: (memory.used / memory.total) * 100,
         },
         uptime: time.uptime,
-        disk: fsSize.map((disk) => ({
+        disk: fsSize
+          .filter((disk) => {
+             // Filter out virtual and pseudo filesystems
+             if (['overlay', 'tmpfs', 'devtmpfs', 'squashfs', 'iso9660', 'devfs', 'autofs'].includes(disk.type)) {
+               return false;
+             }
+             // Filter out Docker specific mounts or small loop devices if necessary
+             if (disk.mount.startsWith('/var/lib/docker') || disk.mount.startsWith('/run')) {
+               return false;
+             }
+             
+             // If running in Docker (FS_PREFIX set), we care about /host (host root) 
+             // and potentially other host partitions, but NOT the container's root (which is usually overlay, handled above)
+             // However, strictly filtering for /host might miss other host partitions if they aren't under /host?
+             // Actually docker-compose mounts /:/host. So host's /mnt/data is at /host/mnt/data.
+             // But 'df' inside container showing /host might just show the root partition. 
+             // Let's rely on standard filtering first. The main culprit for 800GB is likely many 'overlay' or 'squashfs' (snap) mounts.
+             
+             return true;
+          })
+          .map((disk) => ({
           fs: disk.fs,
           type: disk.type,
           size: disk.size,
