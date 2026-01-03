@@ -130,12 +130,23 @@ export class SystemService {
 
 
   private async getHostOsInfo(): Promise<{ distro: string; release: string } | null> {
-    if (!process.env.FS_PREFIX) return null;
+    const fsPrefix = process.env.FS_PREFIX;
+    console.log('[Debug] FS_PREFIX:', fsPrefix);
+    
+    if (!fsPrefix) {
+      console.log('[Debug] FS_PREFIX is not set, skipping host OS parsing');
+      return null;
+    }
 
     try {
-      const osReleasePath = path.join(process.env.FS_PREFIX, 'etc/os-release');
+      const osReleasePath = path.join(fsPrefix, 'etc/os-release');
+      console.log('[Debug] Checking os-release at:', osReleasePath);
+      
       if (fs.existsSync(osReleasePath)) {
+        console.log('[Debug] File exists, reading...');
         const content = fs.readFileSync(osReleasePath, 'utf8');
+        console.log('[Debug] Content length:', content.length);
+        
         const lines = content.split('\n');
         let distro = '';
         let release = '';
@@ -152,9 +163,21 @@ export class SystemService {
           }
         });
 
+        console.log(`[Debug] Parsed: distro=${distro}, release=${release}`);
+
         if (distro) {
           console.log(`✓ Manually parsed host OS: ${distro} ${release}`);
           return { distro, release };
+        }
+      } else {
+        console.log(`[Debug] File does not exist at ${osReleasePath}`);
+        // List directory to see what is there
+        try {
+          const dir = path.dirname(osReleasePath);
+          const files = fs.readdirSync(dir);
+          console.log(`[Debug] Files in ${dir}:`, files.slice(0, 10)); // list first 10
+        } catch (e) {
+          console.log(`[Debug] Cannot list directory:`, e);
         }
       }
     } catch (error) {
