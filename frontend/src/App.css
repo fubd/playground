@@ -1,6 +1,6 @@
 /* App 级别的全局样式 */
 html {
-  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
 * {
