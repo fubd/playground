@@ -485,7 +485,6 @@ const Storage: React.FC = () => {
                       setSelectedFile(record);
                     }
                   },
-                  onContextMenu: (e) => e.stopPropagation(),
                   onDoubleClick: (e) => {
                     e.stopPropagation();
                     if (record.type === 'folder') {
@@ -503,11 +502,16 @@ const Storage: React.FC = () => {
                         <Dropdown
                           menu={{ items: getMenuItems(record) }}
                           trigger={['contextMenu']}
-                          onOpenChange={(open) => {
-                            if (open) setSelectedFile(record);
-                          }}
                         >
-                          <tr {...props} />
+                          <tr
+                            {...props}
+                            onContextMenu={(e) => {
+                              // Stop propagation to prevent background menu, 
+                              // but allow Dropdown to handle it first (if needed)
+                              e.stopPropagation();
+                              props.onContextMenu?.(e);
+                            }}
+                          />
                         </Dropdown>
                       );
                     }
