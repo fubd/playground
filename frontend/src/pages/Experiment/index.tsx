@@ -122,12 +122,21 @@ const Storage: React.FC = () => {
     }
   };
 
-  const handleCreateFolder = async () => {
+  const handleRefresh = useCallback(async () => {
+    await fetchRoots();
+    await fetchFiles(currentFolderId, searchQuery || null);
+  }, [fetchRoots, fetchFiles, currentFolderId, searchQuery]);
+
+  const handleCreateFolder = async (parentId: string | null = currentFolderId) => {
     const name = `新建文件夹_${Date.now().toString().slice(-4)}`;
     try {
-      await fileApi.createFolder(name, currentFolderId);
+      await fileApi.createFolder(name, parentId);
       message.success('文件夹已创建');
-      fetchFiles(currentFolderId, searchQuery || null);
+      if (parentId === null) {
+        await fetchRoots();
+      } else {
+        await fetchFiles(currentFolderId, searchQuery || null);
+      }
     } catch (err) {
       message.error('创建文件夹失败');
     }
@@ -260,8 +269,18 @@ const Storage: React.FC = () => {
     { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.id) },
   ];
 
-  const getBgMenuItems = () => [
-    { key: 'newFolder', label: '新建文件夹', icon: <FolderAddOutlined />, onClick: handleCreateFolder },
+  const getAsideFolderMenuItems = (record: FileInfo) => [
+    { key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: (e: any) => { e.domEvent.stopPropagation(); setRenameId(record.id); setRenameValue(record.originalName); } },
+    { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: (e: any) => { e.domEvent.stopPropagation(); handleDelete(record.id); } },
+  ];
+
+  const getAsideBgMenuItems = () => [
+    { key: 'newFolder', label: '新建文件夹', icon: <FolderAddOutlined />, onClick: () => handleCreateFolder(null) },
+    { key: 'refresh', label: '刷新', icon: <CloudOutlined />, onClick: handleRefresh },
+  ];
+
+  const getContentBgMenuItems = () => [
+    { key: 'newFolder', label: '新建文件夹', icon: <FolderAddOutlined />, onClick: () => handleCreateFolder(currentFolderId) },
     { key: 'upload', label: '上传文件', icon: <UploadOutlined />, onClick: () => uploadButtonRef.current?.click() },
   ];
 
@@ -371,7 +390,7 @@ const Storage: React.FC = () => {
     <Layout style={{ height: 'calc(100vh - 80px)', background: '#fff' }}>
       {/* Sidebar */}
       <Sider width={240} style={{ background: '#f5f5f7', borderRight: '1px solid #e5e5e5' }} theme="light">
-        <Dropdown menu={{ items: getBgMenuItems() }} trigger={['contextMenu']}>
+        <Dropdown menu={{ items: getAsideBgMenuItems() }} trigger={['contextMenu']}>
           <div style={{ height: '100%', padding: '20px 16px' }}>
             <Title level={5} style={{ color: '#8e8e93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '12px' }}>资源位置</Title>
             <Menu
@@ -381,7 +400,11 @@ const Storage: React.FC = () => {
               items={roots.map(root => ({
                 key: root.id,
                 icon: <CloudOutlined />,
-                label: root.originalName,
+                label: (
+                  <Dropdown menu={{ items: getAsideFolderMenuItems(root) }} trigger={['contextMenu']}>
+                    <span style={{ width: '100%', display: 'inline-block' }}>{root.originalName}</span>
+                  </Dropdown>
+                ),
                 onClick: () => setCurrentPath([{ id: root.id, name: root.originalName }])
               }))}
             />
@@ -428,7 +451,7 @@ const Storage: React.FC = () => {
               onChange={handleSearch}
               allowClear
             />
-            <Button icon={<FolderAddOutlined />} onClick={handleCreateFolder}>新建文件夹</Button>
+            <Button icon={<FolderAddOutlined />} onClick={() => handleCreateFolder(currentFolderId)}>新建文件夹</Button>
             <Upload customRequest={handleUpload} showUploadList={false} multiple>
               <Button ref={uploadButtonRef} type="primary" icon={<UploadOutlined />}>上传</Button>
             </Upload>
@@ -438,7 +461,7 @@ const Storage: React.FC = () => {
 
         {/* File Explorer */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          <Dropdown menu={{ items: getBgMenuItems() }} trigger={['contextMenu']}>
+          <Dropdown menu={{ items: getContentBgMenuItems() }} trigger={['contextMenu']}>
             <div style={{ minHeight: '100%' }}>
               <Table
                 columns={columns}
