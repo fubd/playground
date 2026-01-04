@@ -43,6 +43,7 @@ services:
     volumes:
       - ./backend/src:/app/src:ro
       - ./backend/package.json:/app/package.json:ro
+      - uploads_data:/app/uploads
     networks:
       - server-monitor-network
     depends_on:
@@ -77,6 +78,8 @@ services:
 
 volumes:
   mysql_data:
+    driver: local
+  uploads_data:
     driver: local
 
 networks:

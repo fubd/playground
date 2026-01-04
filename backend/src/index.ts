@@ -2,13 +2,16 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { serveStatic } from '@hono/node-server/serve-static';
 import dotenv from 'dotenv';
 import systemRouter from './routes/system.routes.js';
 import todoRouter from './routes/todo.routes.js';
+import fileRouter from './routes/file.routes.js';
 import { testDbConnection } from './db/connection.js';
 import { SystemService } from './services/system.service.js';
 import { MetricsService } from './services/metrics.service.js';
 import { TodoService } from './services/todo.service.js';
+import { FileService } from './services/file.service.js';
 
 dotenv.config();
 
@@ -30,6 +33,9 @@ app.use(
   })
 );
 
+// 静态文件服务 (uploads)
+app.use('/uploads/*', serveStatic({ root: './' }));
+
 // 健康检查
 app.get('/health', (c) => {
   return c.json({
@@ -41,6 +47,7 @@ app.get('/health', (c) => {
 // API 路由
 app.route('/api', systemRouter);
 app.route('/api/todos', todoRouter);
+app.route('/api/files', fileRouter);
 
 // 404 处理
 app.notFound((c) => {
@@ -78,9 +85,11 @@ testDbConnection().then(async (connected) => {
     const systemService = new SystemService();
     const metricsService = new MetricsService();
     const todoService = new TodoService();
+    const fileService = new FileService();
     
     await metricsService.initTable();
     await todoService.initTable();
+    await fileService.initTable();
     console.log('✓ Tables checked/initialized');
 
     // 启动 10s 定时采集

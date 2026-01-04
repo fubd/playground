@@ -48,6 +48,7 @@ services:
     privileged: true
     volumes:
       - /:/host:ro,rslave
+      - uploads_data_prod:/app/uploads
     networks:
       - server-monitor-network
     depends_on:
@@ -70,6 +71,7 @@ services:
       - "${NGINX_PORT}:80"
     volumes:
       - frontend_build:/usr/share/nginx/html:ro
+      - uploads_data_prod:/usr/share/nginx/uploads:ro
     networks:
       - server-monitor-network
     depends_on:
@@ -95,6 +97,8 @@ volumes:
   mysql_data_prod:
     driver: local
   frontend_build:
+    driver: local
+  uploads_data_prod:
     driver: local
 
 networks:

@@ -13,6 +13,10 @@ export default defineConfig({
         target: process.env.VITE_API_TARGET || 'http://backend:3001',
         changeOrigin: true,
       },
+      '/uploads': {
+        target: process.env.VITE_API_TARGET || 'http://backend:3001',
+        changeOrigin: true,
+      },
     },
   },
   dev: {
