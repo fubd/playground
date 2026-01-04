@@ -55,6 +55,7 @@ const Storage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const searchTimer = useRef<NodeJS.Timeout | null>(null);
+  const uploadButtonRef = useRef<HTMLButtonElement>(null);
   const currentFolderId = useMemo(() => currentPath.length > 0 ? currentPath[currentPath.length - 1].id : null, [currentPath]);
 
   const fetchFiles = useCallback(async (parentId: string | null = null, query: string | null = null) => {
@@ -259,6 +260,11 @@ const Storage: React.FC = () => {
     { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.id) },
   ];
 
+  const getBgMenuItems = () => [
+    { key: 'newFolder', label: '新建文件夹', icon: <FolderAddOutlined />, onClick: handleCreateFolder },
+    { key: 'upload', label: '上传文件', icon: <UploadOutlined />, onClick: () => uploadButtonRef.current?.click() },
+  ];
+
   const columns: ColumnsType<FileInfo> = [
     {
       title: '名称',
@@ -365,20 +371,22 @@ const Storage: React.FC = () => {
     <Layout style={{ height: 'calc(100vh - 80px)', background: '#fff' }}>
       {/* Sidebar */}
       <Sider width={240} style={{ background: '#f5f5f7', borderRight: '1px solid #e5e5e5' }} theme="light">
-        <div style={{ padding: '20px 16px' }}>
-          <Title level={5} style={{ color: '#8e8e93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '12px' }}>资源位置</Title>
-          <Menu
-            mode="inline"
-            selectedKeys={[currentPath[0]?.id || '']}
-            style={{ background: 'transparent', border: 'none' }}
-            items={roots.map(root => ({
-              key: root.id,
-              icon: <CloudOutlined />,
-              label: root.originalName,
-              onClick: () => setCurrentPath([{ id: root.id, name: root.originalName }])
-            }))}
-          />
-        </div>
+        <Dropdown menu={{ items: getBgMenuItems() }} trigger={['contextMenu']}>
+          <div style={{ height: '100%', padding: '20px 16px' }}>
+            <Title level={5} style={{ color: '#8e8e93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '12px' }}>资源位置</Title>
+            <Menu
+              mode="inline"
+              selectedKeys={[currentPath[0]?.id || '']}
+              style={{ background: 'transparent', border: 'none' }}
+              items={roots.map(root => ({
+                key: root.id,
+                icon: <CloudOutlined />,
+                label: root.originalName,
+                onClick: () => setCurrentPath([{ id: root.id, name: root.originalName }])
+              }))}
+            />
+          </div>
+        </Dropdown>
       </Sider>
 
       {/* Main Content */}
@@ -422,7 +430,7 @@ const Storage: React.FC = () => {
             />
             <Button icon={<FolderAddOutlined />} onClick={handleCreateFolder}>新建文件夹</Button>
             <Upload customRequest={handleUpload} showUploadList={false} multiple>
-              <Button type="primary" icon={<UploadOutlined />}>上传</Button>
+              <Button ref={uploadButtonRef} type="primary" icon={<UploadOutlined />}>上传</Button>
             </Upload>
             <Button type="text" icon={<InfoCircleOutlined />} onClick={() => setShowPreview(!showPreview)} />
           </Space>
@@ -430,45 +438,46 @@ const Storage: React.FC = () => {
 
         {/* File Explorer */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          <Table
-            columns={columns}
-            dataSource={files}
-            rowKey="id"
-            loading={loading}
-            pagination={false}
-            onRow={(record) => ({
-              onClick: () => setSelectedFile(record),
-              onDoubleClick: (e) => {
-                e.stopPropagation();
-                if (record.type === 'folder') {
-                  navigateTo({ id: record.id, name: record.originalName });
-                }
-              },
-              onContextMenu: (e) => {
-                e.preventDefault();
-                setSelectedFile(record);
-                // The dropdown trigger is usually a click, but for onRow we can't easily trigger the antd dropdown.
-                // However, we can use a custom implementation or just rely on the existing ellipsis button.
-                // For a true macOS experience, we could use a custom component triggered here.
-                // But as a standard practical way, let's trigger the action menu.
-                // Ant Design doesn't officially support Dropdown on table row via onContextMenu easily without extra state.
-              }
-            })}
-            rowClassName={(record) => record.id === selectedFile?.id ? 'selected-row' : ''}
-            components={{
-              body: {
-                row: (props: any) => {
-                  const record = files.find(f => f.id === props['data-row-key']);
-                  if (!record) return <tr {...props} />;
-                  return (
-                    <Dropdown menu={{ items: getMenuItems(record) }} trigger={['contextMenu']}>
-                      <tr {...props} />
-                    </Dropdown>
-                  );
-                }
-              }
-            }}
-          />
+          <Dropdown menu={{ items: getBgMenuItems() }} trigger={['contextMenu']}>
+            <div style={{ minHeight: '100%' }}>
+              <Table
+                columns={columns}
+                dataSource={files}
+                rowKey="id"
+                loading={loading}
+                pagination={false}
+                onRow={(record) => ({
+                  onClick: () => setSelectedFile(record),
+                  onDoubleClick: (e) => {
+                    e.stopPropagation();
+                    if (record.type === 'folder') {
+                      navigateTo({ id: record.id, name: record.originalName });
+                    }
+                  },
+                })}
+                rowClassName={(record) => record.id === selectedFile?.id ? 'selected-row' : ''}
+                components={{
+                  body: {
+                    row: (props: any) => {
+                      const record = files.find(f => f.id === props['data-row-key']);
+                      if (!record) return <tr {...props} />;
+                      return (
+                        <Dropdown
+                          menu={{ items: getMenuItems(record) }}
+                          trigger={['contextMenu']}
+                          onOpenChange={(open) => {
+                            if (open) setSelectedFile(record);
+                          }}
+                        >
+                          <tr {...props} />
+                        </Dropdown>
+                      );
+                    }
+                  }
+                }}
+              />
+            </div>
+          </Dropdown>
         </div>
       </Content>
 
