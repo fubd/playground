@@ -7,7 +7,8 @@ const fileService = new FileService();
 // List all files
 fileRoutes.get('/', async (c) => {
   try {
-    const files = await fileService.listFiles();
+    const parentId = c.req.query('parentId') || null;
+    const files = await fileService.listFiles(parentId);
     return c.json(files);
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
@@ -19,6 +20,7 @@ fileRoutes.post('/upload', async (c) => {
   try {
     const body = await c.req.parseBody();
     const file = body['file'];
+    const parentId = (body['parentId'] as string) || null;
 
     if (!file || !(file instanceof File)) {
       return c.json({ error: 'No file uploaded' }, 400);
@@ -28,12 +30,39 @@ fileRoutes.post('/upload', async (c) => {
       file,
       file.name,
       file.type,
-      file.size
+      file.size,
+      parentId
     );
 
     return c.json(savedFile);
   } catch (err: any) {
     console.error('Upload error:', err);
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Create a folder
+fileRoutes.post('/folder', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { name, parentId } = body;
+    if (!name) return c.json({ error: 'Folder name is required' }, 400);
+    const folder = await fileService.createFolder(name, parentId || null);
+    return c.json(folder);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Rename an item
+fileRoutes.put('/:id/rename', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const { name } = await c.req.json();
+    if (!name) return c.json({ error: 'New name is required' }, 400);
+    const success = await fileService.renameItem(id, name);
+    return c.json({ success });
+  } catch (err: any) {
     return c.json({ error: err.message }, 500);
   }
 });
