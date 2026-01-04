@@ -11,7 +11,7 @@ const Dock: React.FC = () => {
     },
     {
       key: '/test1',
-      label: '演示',
+      label: '任务',
       path: '/test1'
     },
     {

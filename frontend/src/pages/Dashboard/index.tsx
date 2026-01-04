@@ -6,10 +6,10 @@ import {
   ClockCircleOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
-import { systemApi } from '../api/system';
-import type { SystemInfo } from '../types';
-import HistoryChart from '../components/HistoryChart';
-import './Dashboard.css';
+import { systemApi } from '../../api/system';
+import type { SystemInfo } from '../../types';
+import HistoryChart from '../../components/HistoryChart';
+import './index.css';
 
 const { Text } = Typography;
 

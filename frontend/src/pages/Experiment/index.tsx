@@ -3,11 +3,11 @@ import { Typography, Card } from 'antd';
 
 const { Title, Paragraph } = Typography;
 
-const TestPage2: React.FC = () => {
+const Experiment: React.FC = () => {
   return (
     <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
       <Card bordered={false} style={{ borderRadius: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
-        <Title level={2}>测试页面 2</Title>
+        <Title level={2}>实验页面</Title>
         <Paragraph>
           这是第二个导航入口。在 Apple 风格的设计中，简洁和精致的交互是核心体验。
         </Paragraph>
@@ -17,4 +17,4 @@ const TestPage2: React.FC = () => {
   );
 };
 
-export default TestPage2;
+export default Experiment;

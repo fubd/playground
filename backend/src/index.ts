@@ -4,9 +4,11 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import dotenv from 'dotenv';
 import systemRouter from './routes/system.routes.js';
+import todoRouter from './routes/todo.routes.js';
 import { testDbConnection } from './db/connection.js';
 import { SystemService } from './services/system.service.js';
 import { MetricsService } from './services/metrics.service.js';
+import { TodoService } from './services/todo.service.js';
 
 dotenv.config();
 
@@ -38,6 +40,7 @@ app.get('/health', (c) => {
 
 // API 路由
 app.route('/api', systemRouter);
+app.route('/api/todos', todoRouter);
 
 // 404 处理
 app.notFound((c) => {
@@ -74,9 +77,11 @@ testDbConnection().then(async (connected) => {
     // 初始化指标服务
     const systemService = new SystemService();
     const metricsService = new MetricsService();
+    const todoService = new TodoService();
     
     await metricsService.initTable();
-    console.log('✓ Metrics table checked/initialized');
+    await todoService.initTable();
+    console.log('✓ Tables checked/initialized');
 
     // 启动 10s 定时采集
     setInterval(async () => {
