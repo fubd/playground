@@ -25,32 +25,39 @@
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Interaction when parent is hovered */
+.dock-content:hover {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 .dock-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
+  gap: 0; /* Gap managed by dot margin to avoid layout shift */
+  padding: 8px 20px;
   border-radius: 999px;
   color: #3c3c43;
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   background: transparent;
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible;
 }
 
 .dock-item:hover {
-  background: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.4);
   color: #000;
 }
 
 .dock-item.active {
   background: #fff;
   color: #000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .active-dot {
@@ -61,8 +68,9 @@
   height: 6px;
   margin-right: 0px;
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
+  pointer-events: none;
 }
 
 .active-dot::after {
@@ -74,12 +82,12 @@
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(0, 122, 255, 0.4);
   transform: scale(0);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dock-item.active .active-dot {
-  width: 10px; /* Fixed space for dot + small gap */
-  margin-right: 4px;
+  width: 8px; 
+  margin-right: 6px;
   opacity: 1;
 }
 
@@ -91,23 +99,5 @@
   position: relative;
   z-index: 1;
   letter-spacing: -0.01em;
-}
-
-/* Subtle reflection/highlight */
-.dock-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
-  pointer-events: none;
-}
-
-/* Interaction when parent is hovered */
-.dock-content:hover {
-  background: rgba(255, 255, 255, 0.55);
-  transform: scale(1.02);
+  white-space: nowrap;
 }
