@@ -1,10 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import {
-  HomeOutlined,
-  ExperimentOutlined,
-  ThunderboltOutlined
-} from '@ant-design/icons';
+import { NavLink } from 'react-router-dom';
 import './Dock.css';
 
 const Dock: React.FC = () => {

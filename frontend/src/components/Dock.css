@@ -54,17 +54,37 @@
 }
 
 .active-dot {
-  width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0px;
+  height: 6px;
+  margin-right: 0px;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+}
+
+.active-dot::after {
+  content: '';
+  display: block;
+  min-width: 6px;
   height: 6px;
   background-color: #007aff;
   border-radius: 50%;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.4);
+  transform: scale(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dock-item.active .active-dot {
-  width: 6px;
-  margin-right: 2px;
+  width: 10px; /* Fixed space for dot + small gap */
+  margin-right: 4px;
+  opacity: 1;
+}
+
+.dock-item.active .active-dot::after {
+  transform: scale(1);
 }
 
 .dock-label-text {
