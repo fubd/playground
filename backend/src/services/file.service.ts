@@ -7,8 +7,10 @@ export interface FileInfo {
   id: string;
   filename: string;
   originalName: string;
-  mimeType: string;
-  size: number;
+  mimeType: string | null;
+  size: number | null;
+  type: 'file' | 'folder';
+  parentId: string | null;
   createdAt: string;
 }
 
@@ -21,7 +23,7 @@ export class FileService {
 
   async initTable() {
     const pool = getDbPool();
-    const sql = `
+    const createTableSql = `
       CREATE TABLE IF NOT EXISTS files (
         id VARCHAR(36) PRIMARY KEY,
         filename VARCHAR(255) NOT NULL,
@@ -34,16 +36,24 @@ export class FileService {
         INDEX idx_parent_id (parent_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `;
-    await pool.query(sql);
+    await pool.query(createTableSql);
 
     // Migration: Add columns if they don't exist (for existing databases)
     try {
-      await pool.query('ALTER TABLE files ADD COLUMN IF NOT EXISTS type ENUM("file", "folder") DEFAULT "file"');
-      await pool.query('ALTER TABLE files ADD COLUMN IF NOT EXISTS parent_id VARCHAR(36) NULL');
-      await pool.query('ALTER TABLE files ADD INDEX IF NOT EXISTS idx_parent_id (parent_id)');
+      const [columns] = await pool.query('SHOW COLUMNS FROM files');
+      const columnNames = (columns as any[]).map(c => c.Field);
+
+      if (!columnNames.includes('type')) {
+        console.log('Adding "type" column to files table...');
+        await pool.query('ALTER TABLE files ADD COLUMN type ENUM("file", "folder") DEFAULT "file" AFTER size');
+      }
+      if (!columnNames.includes('parent_id')) {
+        console.log('Adding "parent_id" column to files table...');
+        await pool.query('ALTER TABLE files ADD COLUMN parent_id VARCHAR(36) NULL AFTER type');
+        await pool.query('ALTER TABLE files ADD INDEX idx_parent_id (parent_id)');
+      }
     } catch (err) {
-      // Ignore if columns already exist or MySQL version doesn't support IF NOT EXISTS in ALTER
-      console.log('Database migration check finished (some errors may be ignored)');
+      console.error('Database migration check failed:', err);
     }
     
     // Ensure upload directory exists
@@ -75,11 +85,13 @@ export class FileService {
       originalName,
       mimeType,
       size,
+      type: 'file',
+      parentId,
       createdAt: new Date().toISOString(),
     };
   }
 
-  async listFiles(parentId: string | null = null): Promise<any[]> {
+  async listFiles(parentId: string | null = null): Promise<FileInfo[]> {
     const pool = getDbPool();
     let sql = 'SELECT * FROM files WHERE ';
     const params: any[] = [];
@@ -124,18 +136,28 @@ export class FileService {
 
   async deleteFile(id: string): Promise<boolean> {
     const pool = getDbPool();
-    const [rows] = await pool.query('SELECT filename FROM files WHERE id = ?', [id]);
-    const files = rows as any[];
+    const [rows] = await pool.query('SELECT * FROM files WHERE id = ?', [id]);
+    const items = rows as any[];
     
-    if (files.length === 0) return false;
+    if (items.length === 0) return false;
 
-    const filename = files[0].filename;
-    const filePath = path.join(this.uploadDir, filename);
+    const item = items[0];
 
-    try {
-      await fs.unlink(filePath);
-    } catch (err) {
-      console.error(`Failed to delete file from disk: ${filePath}`, err);
+    if (item.type === 'folder') {
+      // Find all items in this folder
+      const [childRows] = await pool.query('SELECT id FROM files WHERE parent_id = ?', [id]);
+      const children = childRows as any[];
+      for (const child of children) {
+        await this.deleteFile(child.id);
+      }
+    } else {
+      // It's a file, delete from disk
+      const filePath = path.join(this.uploadDir, item.filename);
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.error(`Failed to delete file from disk: ${filePath}`, err);
+      }
     }
 
     await pool.query('DELETE FROM files WHERE id = ?', [id]);
@@ -156,6 +178,8 @@ export class FileService {
       originalName: f.original_name,
       mimeType: f.mime_type,
       size: f.size,
+      type: f.type,
+      parentId: f.parent_id,
       createdAt: f.created_at,
     };
   }
