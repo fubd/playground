@@ -408,9 +408,6 @@ const Storage: React.FC = () => {
                   {i === 0 ? <HomeOutlined /> : p.name}
                 </Breadcrumb.Item>
               ))}
-              {searchQuery && (
-                <Breadcrumb.Item>搜索结果: {searchQuery}</Breadcrumb.Item>
-              )}
             </Breadcrumb>
           </Space>
           <Space>
