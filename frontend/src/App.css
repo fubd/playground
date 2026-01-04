@@ -1,4 +1,8 @@
 /* App 级别的全局样式 */
+html {
+  scrollbar-gutter: stable;
+}
+
 * {
   margin: 0;
   padding: 0;

@@ -22,7 +22,7 @@
   box-shadow: 
     0 4px 24px rgba(0, 0, 0, 0.08),
     0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* Interaction when parent is hovered */
@@ -38,14 +38,14 @@
   display: flex;
   align-items: center;
   gap: 0; /* Gap managed by dot margin to avoid layout shift */
-  padding: 8px 20px;
+  padding: 6px 18px;
   border-radius: 999px;
   color: #3c3c43;
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   background: transparent;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow: visible;
 }
 
@@ -68,7 +68,7 @@
   height: 6px;
   margin-right: 0px;
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow: visible;
   pointer-events: none;
 }
@@ -82,7 +82,7 @@
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(0, 122, 255, 0.4);
   transform: scale(0);
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dock-item.active .active-dot {
