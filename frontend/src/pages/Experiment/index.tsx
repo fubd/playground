@@ -293,6 +293,7 @@ const Storage: React.FC = () => {
         <div
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
           onClick={(e) => {
+            if (e.button !== 0) return;
             e.stopPropagation();
             if (record.type === 'folder') {
               navigateTo({ id: record.id, name: record.originalName });
