@@ -402,7 +402,12 @@ const Storage: React.FC = () => {
                 icon: <CloudOutlined />,
                 label: (
                   <Dropdown menu={{ items: getAsideFolderMenuItems(root) }} trigger={['contextMenu']}>
-                    <span style={{ width: '100%', display: 'inline-block' }}>{root.originalName}</span>
+                    <span
+                      style={{ width: '100%', display: 'inline-block' }}
+                      onContextMenu={(e) => e.stopPropagation()}
+                    >
+                      {root.originalName}
+                    </span>
                   </Dropdown>
                 ),
                 onClick: () => setCurrentPath([{ id: root.id, name: root.originalName }])
@@ -471,6 +476,7 @@ const Storage: React.FC = () => {
                 pagination={false}
                 onRow={(record) => ({
                   onClick: () => setSelectedFile(record),
+                  onContextMenu: (e) => e.stopPropagation(),
                   onDoubleClick: (e) => {
                     e.stopPropagation();
                     if (record.type === 'folder') {
