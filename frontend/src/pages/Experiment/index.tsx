@@ -405,12 +405,16 @@ const Storage: React.FC = () => {
                     <span
                       style={{ width: '100%', display: 'inline-block' }}
                       onContextMenu={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        if (e.button === 0) {
+                          setCurrentPath([{ id: root.id, name: root.originalName }]);
+                        }
+                      }}
                     >
                       {root.originalName}
                     </span>
                   </Dropdown>
                 ),
-                onClick: () => setCurrentPath([{ id: root.id, name: root.originalName }])
               }))}
             />
           </div>
@@ -475,7 +479,11 @@ const Storage: React.FC = () => {
                 loading={loading}
                 pagination={false}
                 onRow={(record) => ({
-                  onClick: () => setSelectedFile(record),
+                  onClick: (e: any) => {
+                    if (e.button === 0) {
+                      setSelectedFile(record);
+                    }
+                  },
                   onContextMenu: (e) => e.stopPropagation(),
                   onDoubleClick: (e) => {
                     e.stopPropagation();
