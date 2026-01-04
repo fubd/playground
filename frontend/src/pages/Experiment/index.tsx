@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Typography,
-  Card,
   Table,
   Button,
   Upload,
   Space,
   Modal,
   message,
-  Tooltip,
   Layout,
   Menu,
   Breadcrumb,
@@ -54,13 +52,15 @@ const Storage: React.FC = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
+  const searchTimer = useRef<NodeJS.Timeout | null>(null);
   const currentFolderId = useMemo(() => currentPath.length > 0 ? currentPath[currentPath.length - 1].id : null, [currentPath]);
 
-  const fetchFiles = useCallback(async (parentId: string | null = null) => {
+  const fetchFiles = useCallback(async (parentId: string | null = null, query: string | null = null) => {
     setLoading(true);
     try {
-      const data = await fileApi.listFiles(parentId) as unknown as FileInfo[];
+      const data = await fileApi.listFiles(parentId, query) as unknown as FileInfo[];
       setFiles(data);
     } catch (err) {
       console.error('Failed to fetch files:', err);
@@ -87,11 +87,26 @@ const Storage: React.FC = () => {
   }, [fetchRoots]);
 
   useEffect(() => {
-    if (currentFolderId !== null || currentPath.length > 0) {
+    if (!searchQuery && (currentFolderId !== null || currentPath.length > 0)) {
       fetchFiles(currentFolderId);
     }
     setSelectedFile(null);
-  }, [currentFolderId, fetchFiles, currentPath.length]);
+  }, [currentFolderId, fetchFiles, currentPath.length, searchQuery]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+
+    searchTimer.current = setTimeout(() => {
+      if (val.trim()) {
+        fetchFiles(null, val.trim());
+      } else {
+        fetchFiles(currentFolderId);
+      }
+    }, 500);
+  };
 
   const handleUpload = async (options: any) => {
     const { file, onSuccess, onError } = options;
@@ -99,7 +114,7 @@ const Storage: React.FC = () => {
       await fileApi.uploadFile(file as File, currentFolderId);
       message.success(`${file.name} 上传成功`);
       onSuccess?.(null);
-      fetchFiles(currentFolderId);
+      fetchFiles(currentFolderId, searchQuery || null);
     } catch (err: any) {
       message.error(`${file.name} 上传失败`);
       onError?.(err as Error);
@@ -111,7 +126,7 @@ const Storage: React.FC = () => {
     try {
       await fileApi.createFolder(name, currentFolderId);
       message.success('文件夹已创建');
-      fetchFiles(currentFolderId);
+      fetchFiles(currentFolderId, searchQuery || null);
     } catch (err) {
       message.error('创建文件夹失败');
     }
@@ -129,7 +144,7 @@ const Storage: React.FC = () => {
           await fileApi.deleteFile(id);
           message.success('删除成功');
           if (selectedFile?.id === id) setSelectedFile(null);
-          fetchFiles(currentFolderId);
+          fetchFiles(currentFolderId, searchQuery || null);
         } catch (err) {
           console.error('Delete error:', err);
           message.error('删除失败');
@@ -147,7 +162,7 @@ const Storage: React.FC = () => {
       await fileApi.renameItem(id, renameValue.trim());
       message.success('重命名成功');
       setRenameId(null);
-      fetchFiles(currentFolderId);
+      fetchFiles(currentFolderId, searchQuery || null);
     } catch (err) {
       message.error('重命名失败');
     }
@@ -155,8 +170,6 @@ const Storage: React.FC = () => {
 
   const handleCopyLink = (file: FileInfo) => {
     const url = `${window.location.origin}/uploads/${file.filename}`;
-
-    // Fallback for non-HTTPS or failed clipboard API
     const copyToClipboard = (text: string) => {
       if (navigator.clipboard && window.isSecureContext) {
         return navigator.clipboard.writeText(text);
@@ -197,6 +210,7 @@ const Storage: React.FC = () => {
   };
 
   const navigateTo = (folder: { id: string | null; name: string }) => {
+    setSearchQuery('');
     const index = currentPath.findIndex(p => p.id === folder.id);
     if (index !== -1) {
       setCurrentPath(currentPath.slice(0, index + 1));
@@ -284,7 +298,7 @@ const Storage: React.FC = () => {
       title: '大小',
       dataIndex: 'size',
       key: 'size',
-      render: (size, record) => record.type === 'file' ? formatSize(size) : '--',
+      render: (size, record) => record.type === 'file' ? formatSize(size || 0) : '--',
     },
     {
       title: '修改时间',
@@ -394,10 +408,21 @@ const Storage: React.FC = () => {
                   {i === 0 ? <HomeOutlined /> : p.name}
                 </Breadcrumb.Item>
               ))}
+              {searchQuery && (
+                <Breadcrumb.Item>搜索结果: {searchQuery}</Breadcrumb.Item>
+              )}
             </Breadcrumb>
           </Space>
           <Space>
-            <Input prefix={<SearchOutlined />} placeholder="搜索" variant="filled" style={{ width: '180px', borderRadius: '6px' }} />
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder="搜索所有文件"
+              variant="filled"
+              style={{ width: '200px', borderRadius: '6px' }}
+              value={searchQuery}
+              onChange={handleSearch}
+              allowClear
+            />
             <Button icon={<FolderAddOutlined />} onClick={handleCreateFolder}>新建文件夹</Button>
             <Upload customRequest={handleUpload} showUploadList={false} multiple>
               <Button type="primary" icon={<UploadOutlined />}>上传</Button>
@@ -421,9 +446,31 @@ const Storage: React.FC = () => {
                 if (record.type === 'folder') {
                   navigateTo({ id: record.id, name: record.originalName });
                 }
+              },
+              onContextMenu: (e) => {
+                e.preventDefault();
+                setSelectedFile(record);
+                // The dropdown trigger is usually a click, but for onRow we can't easily trigger the antd dropdown.
+                // However, we can use a custom implementation or just rely on the existing ellipsis button.
+                // For a true macOS experience, we could use a custom component triggered here.
+                // But as a standard practical way, let's trigger the action menu.
+                // Ant Design doesn't officially support Dropdown on table row via onContextMenu easily without extra state.
               }
             })}
             rowClassName={(record) => record.id === selectedFile?.id ? 'selected-row' : ''}
+            components={{
+              body: {
+                row: (props: any) => {
+                  const record = files.find(f => f.id === props['data-row-key']);
+                  if (!record) return <tr {...props} />;
+                  return (
+                    <Dropdown menu={{ items: getMenuItems(record) }} trigger={['contextMenu']}>
+                      <tr {...props} />
+                    </Dropdown>
+                  );
+                }
+              }
+            }}
           />
         </div>
       </Content>

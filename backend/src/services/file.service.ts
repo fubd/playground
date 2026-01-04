@@ -102,11 +102,15 @@ export class FileService {
     };
   }
 
-  async listFiles(parentId: string | null = null): Promise<FileInfo[]> {
+  async listFiles(parentId: string | null = null, queryStr: string | null = null): Promise<FileInfo[]> {
     const db = getDb();
     let query;
 
-    if (parentId === null) {
+    if (queryStr) {
+      // Global search
+      const searchPattern = `%${queryStr}%`;
+      query = sql`SELECT * FROM files WHERE original_name LIKE ${searchPattern} ORDER BY type DESC, created_at DESC`;
+    } else if (parentId === null) {
       query = sql`SELECT * FROM files WHERE parent_id IS NULL ORDER BY type DESC, created_at DESC`;
     } else {
       query = sql`SELECT * FROM files WHERE parent_id = ${parentId} ORDER BY type DESC, created_at DESC`;

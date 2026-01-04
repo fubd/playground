@@ -18,7 +18,8 @@ fileRoutes.get('/roots', async (c) => {
 fileRoutes.get('/', async (c) => {
   try {
     const parentId = c.req.query('parentId') || null;
-    const files = await fileService.listFiles(parentId);
+    const query = c.req.query('q') || null;
+    const files = await fileService.listFiles(parentId, query);
     return c.json(files);
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
