@@ -1,5 +1,5 @@
-import { getDbPool } from '../db/connection.js';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { getDb } from '../db/connection.js';
+import { sql } from 'drizzle-orm';
 
 export interface Todo {
   id: number;
@@ -12,18 +12,16 @@ export class TodoService {
   private tableName = 'todos';
 
   async initTable() {
-    const pool = getDbPool();
-    if (!pool) return;
-
+    const db = getDb();
     try {
-      await pool.execute(`
+      await db.execute(sql.raw(`
         CREATE TABLE IF NOT EXISTS ${this.tableName} (
           id INT AUTO_INCREMENT PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
           completed BOOLEAN DEFAULT FALSE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-      `);
+      `));
       console.log(`✓ Table ${this.tableName} initialized`);
     } catch (error) {
       console.error(`✗ Failed to initialize table ${this.tableName}:`, error);
@@ -31,13 +29,9 @@ export class TodoService {
   }
 
   async getAll(): Promise<Todo[]> {
-    const pool = getDbPool();
-    if (!pool) return [];
-
+    const db = getDb();
     try {
-      const [rows] = await pool.execute<RowDataPacket[]>(
-        `SELECT * FROM ${this.tableName} ORDER BY created_at DESC`
-      );
+      const [rows] = await db.execute(sql`SELECT * FROM todos ORDER BY created_at DESC`);
       return (rows as any[]).map(row => ({
         id: row.id,
         title: row.title,
@@ -51,20 +45,14 @@ export class TodoService {
   }
 
   async create(title: string): Promise<Todo | null> {
-    const pool = getDbPool();
-    if (!pool) return null;
-
+    const db = getDb();
     try {
-      const [result] = await pool.execute<ResultSetHeader>(
-        `INSERT INTO ${this.tableName} (title) VALUES (?)`,
-        [title]
-      );
-      const [rows] = await pool.execute<RowDataPacket[] & Todo[]>(
-        `SELECT * FROM ${this.tableName} WHERE id = ?`,
-        [result.insertId]
-      );
-      if (rows[0]) {
-        return { ...rows[0], completed: Boolean(rows[0].completed) };
+      const [result] = await db.execute(sql`INSERT INTO todos (title) VALUES (${title})`);
+      const insertId = (result as any).insertId;
+      const [rows] = await db.execute(sql`SELECT * FROM todos WHERE id = ${insertId}`);
+      const row = (rows as any[])[0];
+      if (row) {
+        return { ...row, completed: Boolean(row.completed) };
       }
       return null;
     } catch (error) {
@@ -74,30 +62,22 @@ export class TodoService {
   }
 
   async update(id: number, data: { title?: string; completed?: boolean }): Promise<boolean> {
-    const pool = getDbPool();
-    if (!pool) return false;
-
-    const updates: string[] = [];
-    const values: any[] = [];
-
+    const db = getDb();
+    const updates: any[] = [];
+    
     if (data.title !== undefined) {
-      updates.push('title = ?');
-      values.push(data.title);
+      updates.push(sql`title = ${data.title}`);
     }
     if (data.completed !== undefined) {
-      updates.push('completed = ?');
-      values.push(data.completed);
+      updates.push(sql`completed = ${data.completed}`);
     }
 
     if (updates.length === 0) return false;
 
-    values.push(id);
-
     try {
-      await pool.execute(
-        `UPDATE ${this.tableName} SET ${updates.join(', ')} WHERE id = ?`,
-        values
-      );
+      // Drizzle handles joining sql chunks with commas automatically when using sql.join
+      const setClause = sql.join(updates, sql.raw(', '));
+      await db.execute(sql`UPDATE todos SET ${setClause} WHERE id = ${id}`);
       return true;
     } catch (error) {
       console.error('Failed to update todo:', error);
@@ -106,11 +86,9 @@ export class TodoService {
   }
 
   async delete(id: number): Promise<boolean> {
-    const pool = getDbPool();
-    if (!pool) return false;
-
+    const db = getDb();
     try {
-      await pool.execute(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
+      await db.execute(sql`DELETE FROM todos WHERE id = ${id}`);
       return true;
     } catch (error) {
       console.error('Failed to delete todo:', error);

@@ -1,4 +1,5 @@
-import { getDbPool } from '../db/connection.js';
+import { getDb } from '../db/connection.js';
+import { sql } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,7 +23,7 @@ export class FileService {
   }
 
   async initTable() {
-    const pool = getDbPool();
+    const db = getDb();
     const createTableSql = `
       CREATE TABLE IF NOT EXISTS files (
         id VARCHAR(36) PRIMARY KEY,
@@ -36,24 +37,35 @@ export class FileService {
         INDEX idx_parent_id (parent_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `;
-    await pool.query(createTableSql);
+    await db.execute(sql.raw(createTableSql));
 
     // Migration: Add columns if they don't exist (for existing databases)
     try {
-      const [columns] = await pool.query('SHOW COLUMNS FROM files');
+      const [columns] = await db.execute(sql.raw('SHOW COLUMNS FROM files'));
       const columnNames = (columns as any[]).map(c => c.Field);
 
       if (!columnNames.includes('type')) {
         console.log('Adding "type" column to files table...');
-        await pool.query('ALTER TABLE files ADD COLUMN type ENUM("file", "folder") DEFAULT "file" AFTER size');
+        await db.execute(sql.raw('ALTER TABLE files ADD COLUMN type ENUM("file", "folder") DEFAULT "file" AFTER size'));
       }
       if (!columnNames.includes('parent_id')) {
         console.log('Adding "parent_id" column to files table...');
-        await pool.query('ALTER TABLE files ADD COLUMN parent_id VARCHAR(36) NULL AFTER type');
-        await pool.query('ALTER TABLE files ADD INDEX idx_parent_id (parent_id)');
+        await db.execute(sql.raw('ALTER TABLE files ADD COLUMN parent_id VARCHAR(36) NULL AFTER type'));
+        await db.execute(sql.raw('ALTER TABLE files ADD INDEX idx_parent_id (parent_id)'));
       }
     } catch (err) {
       console.error('Database migration check failed:', err);
+    }
+
+    // Initialize default root folder "我的资源" if no folders exist
+    try {
+      const [rows] = await db.execute(sql`SELECT id FROM files WHERE type = 'folder' AND parent_id IS NULL LIMIT 1`);
+      if ((rows as any[]).length === 0) {
+        console.log('Initializing default root folder: 我的资源');
+        await this.createFolder('我的资源', null);
+      }
+    } catch (err) {
+      console.error('Failed to initialize default root folder:', err);
     }
     
     // Ensure upload directory exists
@@ -73,10 +85,9 @@ export class FileService {
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(filePath, buffer);
 
-    const pool = getDbPool();
-    await pool.query(
-      'INSERT INTO files (id, filename, original_name, mime_type, size, type, parent_id) VALUES (?, ?, ?, ?, ?, "file", ?)',
-      [id, filename, originalName, mimeType, size, parentId]
+    const db = getDb();
+    await db.execute(
+      sql`INSERT INTO files (id, filename, original_name, mime_type, size, type, parent_id) VALUES (${id}, ${filename}, ${originalName}, ${mimeType}, ${size}, 'file', ${parentId})`
     );
 
     return {
@@ -92,19 +103,32 @@ export class FileService {
   }
 
   async listFiles(parentId: string | null = null): Promise<FileInfo[]> {
-    const pool = getDbPool();
-    let sql = 'SELECT * FROM files WHERE ';
-    const params: any[] = [];
+    const db = getDb();
+    let query;
 
     if (parentId === null) {
-      sql += 'parent_id IS NULL ';
+      query = sql`SELECT * FROM files WHERE parent_id IS NULL ORDER BY type DESC, created_at DESC`;
     } else {
-      sql += 'parent_id = ? ';
-      params.push(parentId);
+      query = sql`SELECT * FROM files WHERE parent_id = ${parentId} ORDER BY type DESC, created_at DESC`;
     }
 
-    sql += 'ORDER BY type DESC, created_at DESC';
-    const [rows] = await pool.query(sql, params);
+    const [rows] = await db.execute(query);
+    const files = rows as any[];
+    return files.map(f => ({
+      id: f.id,
+      filename: f.filename,
+      originalName: f.original_name,
+      mimeType: f.mime_type,
+      size: f.size,
+      type: f.type,
+      parentId: f.parent_id,
+      createdAt: f.created_at,
+    }));
+  }
+
+  async getRoots(): Promise<FileInfo[]> {
+    const db = getDb();
+    const [rows] = await db.execute(sql`SELECT * FROM files WHERE type = 'folder' AND parent_id IS NULL ORDER BY created_at ASC`);
     const files = rows as any[];
     return files.map(f => ({
       id: f.id,
@@ -120,23 +144,22 @@ export class FileService {
 
   async createFolder(name: string, parentId: string | null = null): Promise<any> {
     const id = uuidv4();
-    const pool = getDbPool();
-    await pool.query(
-      'INSERT INTO files (id, filename, original_name, type, parent_id) VALUES (?, ?, ?, "folder", ?)',
-      [id, name, name, parentId]
+    const db = getDb();
+    await db.execute(
+      sql`INSERT INTO files (id, filename, original_name, type, parent_id) VALUES (${id}, ${name}, ${name}, 'folder', ${parentId})`
     );
     return { id, name, type: 'folder', parentId };
   }
 
   async renameItem(id: string, newName: string): Promise<boolean> {
-    const pool = getDbPool();
-    await pool.query('UPDATE files SET original_name = ? WHERE id = ?', [newName, id]);
+    const db = getDb();
+    await db.execute(sql`UPDATE files SET original_name = ${newName} WHERE id = ${id}`);
     return true;
   }
 
   async deleteFile(id: string): Promise<boolean> {
-    const pool = getDbPool();
-    const [rows] = await pool.query('SELECT * FROM files WHERE id = ?', [id]);
+    const db = getDb();
+    const [rows] = await db.execute(sql`SELECT * FROM files WHERE id = ${id}`);
     const items = rows as any[];
     
     if (items.length === 0) return false;
@@ -145,7 +168,7 @@ export class FileService {
 
     if (item.type === 'folder') {
       // Find all items in this folder
-      const [childRows] = await pool.query('SELECT id FROM files WHERE parent_id = ?', [id]);
+      const [childRows] = await db.execute(sql`SELECT id FROM files WHERE parent_id = ${id}`);
       const children = childRows as any[];
       for (const child of children) {
         await this.deleteFile(child.id);
@@ -160,13 +183,13 @@ export class FileService {
       }
     }
 
-    await pool.query('DELETE FROM files WHERE id = ?', [id]);
+    await db.execute(sql`DELETE FROM files WHERE id = ${id}`);
     return true;
   }
 
   async getFileById(id: string): Promise<FileInfo | null> {
-    const pool = getDbPool();
-    const [rows] = await pool.query('SELECT * FROM files WHERE id = ?', [id]);
+    const db = getDb();
+    const [rows] = await db.execute(sql`SELECT * FROM files WHERE id = ${id}`);
     const files = rows as any[];
     
     if (files.length === 0) return null;

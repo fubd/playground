@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Typography,
   Card,
@@ -9,13 +9,11 @@ import {
   Modal,
   message,
   Tooltip,
-  Tag,
   Layout,
   Menu,
   Breadcrumb,
   Input,
   Dropdown,
-  Progress
 } from 'antd';
 import {
   UploadOutlined,
@@ -38,29 +36,28 @@ import {
   InfoCircleOutlined,
   HomeOutlined,
   CloudOutlined,
-  LockOutlined,
-  ShareAltOutlined,
   EditOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { FileInfo } from '../../api/file.js';
 import { fileApi } from '../../api/file.js';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Sider, Content } = Layout;
 
 const Storage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileInfo[]>([]);
+  const [roots, setRoots] = useState<FileInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
-  const [currentPath, setCurrentPath] = useState<{ id: string | null; name: string }[]>([{ id: null, name: '我的资源' }]);
+  const [currentPath, setCurrentPath] = useState<{ id: string | null; name: string }[]>([]);
   const [showPreview, setShowPreview] = useState(true);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const currentFolderId = useMemo(() => currentPath[currentPath.length - 1].id, [currentPath]);
+  const currentFolderId = useMemo(() => currentPath.length > 0 ? currentPath[currentPath.length - 1].id : null, [currentPath]);
 
-  const fetchFiles = async (parentId: string | null = null) => {
+  const fetchFiles = useCallback(async (parentId: string | null = null) => {
     setLoading(true);
     try {
       const data = await fileApi.listFiles(parentId) as unknown as FileInfo[];
@@ -71,12 +68,30 @@ const Storage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchRoots = useCallback(async () => {
+    try {
+      const data = await fileApi.fetchRoots() as unknown as FileInfo[];
+      setRoots(data);
+      if (data.length > 0 && currentPath.length === 0) {
+        setCurrentPath([{ id: data[0].id, name: data[0].originalName }]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch roots:', err);
+    }
+  }, [currentPath.length]);
 
   useEffect(() => {
-    fetchFiles(currentFolderId);
+    fetchRoots();
+  }, [fetchRoots]);
+
+  useEffect(() => {
+    if (currentFolderId !== null || currentPath.length > 0) {
+      fetchFiles(currentFolderId);
+    }
     setSelectedFile(null);
-  }, [currentFolderId]);
+  }, [currentFolderId, fetchFiles, currentPath.length]);
 
   const handleUpload = async (options: any) => {
     const { file, onSuccess, onError } = options;
@@ -140,7 +155,32 @@ const Storage: React.FC = () => {
 
   const handleCopyLink = (file: FileInfo) => {
     const url = `${window.location.origin}/uploads/${file.filename}`;
-    navigator.clipboard.writeText(url).then(() => {
+
+    // Fallback for non-HTTPS or failed clipboard API
+    const copyToClipboard = (text: string) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          return Promise.resolve();
+        } catch (err) {
+          return Promise.reject(err);
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+    };
+
+    copyToClipboard(url).then(() => {
       message.success('链接已复制到剪贴板');
     }).catch(() => {
       message.error('复制失败');
@@ -173,6 +213,17 @@ const Storage: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '--';
+    const date = new Date(dateStr);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${d} ${hh}:${mm}`;
+  };
+
   const getFileIcon = (record: FileInfo, large: boolean = false) => {
     const style = { fontSize: large ? '64px' : '20px', color: '#1890ff' };
     if (record.type === 'folder') return <FolderOpenOutlined style={{ ...style, color: '#ffc107' }} />;
@@ -185,16 +236,14 @@ const Storage: React.FC = () => {
     return <FileOutlined style={{ ...style, color: '#8c8c8c' }} />;
   };
 
-  const menu = (record: FileInfo) => (
-    <Menu items={[
-      { key: 'preview', label: '预览', icon: <EyeOutlined />, onClick: () => setSelectedFile(record) },
-      { key: 'download', label: '下载', icon: <DownloadOutlined />, onClick: () => handleDownload(record), disabled: record.type === 'folder' },
-      { key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: () => { setRenameId(record.id); setRenameValue(record.originalName); } },
-      { key: 'copy', label: '复制链接', icon: <CopyOutlined />, onClick: () => handleCopyLink(record), disabled: record.type === 'folder' },
-      { type: 'divider' },
-      { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.id) },
-    ]} />
-  );
+  const getMenuItems = (record: FileInfo) => [
+    { key: 'preview', label: '预览', icon: <EyeOutlined />, onClick: () => setSelectedFile(record) },
+    { key: 'download', label: '下载', icon: <DownloadOutlined />, onClick: () => handleDownload(record), disabled: record.type === 'folder' },
+    { key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: () => { setRenameId(record.id); setRenameValue(record.originalName); } },
+    { key: 'copy', label: '复制链接', icon: <CopyOutlined />, onClick: () => handleCopyLink(record), disabled: record.type === 'folder' },
+    { type: 'divider' as const },
+    { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.id) },
+  ];
 
   const columns: ColumnsType<FileInfo> = [
     {
@@ -204,7 +253,8 @@ const Storage: React.FC = () => {
       render: (text, record) => (
         <div
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             if (record.type === 'folder') {
               navigateTo({ id: record.id, name: record.originalName });
             } else {
@@ -240,14 +290,14 @@ const Storage: React.FC = () => {
       title: '修改时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => new Date(date).toLocaleString('zh-CN', { hour12: false }),
+      render: (date) => formatDate(date),
     },
     {
       title: '',
       key: 'action',
       width: 40,
       render: (_, record) => (
-        <Dropdown overlay={menu(record)} trigger={['click']}>
+        <Dropdown menu={{ items: getMenuItems(record) }} trigger={['click']}>
           <Button type="text" icon={<EllipsisOutlined />} onClick={e => e.stopPropagation()} />
         </Dropdown>
       ),
@@ -273,18 +323,18 @@ const Storage: React.FC = () => {
           ) : (
             getFileIcon(selectedFile, true)
           )}
-          <Title level={4} style={{ marginTop: '24px' }}>{originalName}</Title>
-          <Text type="secondary">{selectedFile.type === 'folder' ? '文件夹' : mimeType}</Text>
+          <Title level={4} style={{ marginTop: '24px', overflowWrap: 'break-word' }}>{originalName}</Title>
+          <Text type="secondary">{selectedFile.type === 'folder' ? '文件夹' : (mimeType || '未知类型')}</Text>
         </div>
 
         <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
           <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
             <Text type="secondary">文件大小:</Text>
-            <Text>{selectedFile.type === 'file' ? formatSize(size) : '--'}</Text>
+            <Text>{selectedFile.type === 'file' ? formatSize(size || 0) : '--'}</Text>
           </div>
           <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
             <Text type="secondary">创建时间:</Text>
-            <Text>{new Date(createdAt).toLocaleString()}</Text>
+            <Text>{formatDate(createdAt)}</Text>
           </div>
           {selectedFile.type === 'file' && (
             <Space direction="vertical" style={{ width: '100%', marginTop: '24px' }}>
@@ -302,16 +352,17 @@ const Storage: React.FC = () => {
       {/* Sidebar */}
       <Sider width={240} style={{ background: '#f5f5f7', borderRight: '1px solid #e5e5e5' }} theme="light">
         <div style={{ padding: '20px 16px' }}>
-          <Title level={5} style={{ color: '#8e8e93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '12px' }}>位置</Title>
+          <Title level={5} style={{ color: '#8e8e93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '12px' }}>资源位置</Title>
           <Menu
             mode="inline"
-            defaultSelectedKeys={['drive']}
+            selectedKeys={[currentPath[0]?.id || '']}
             style={{ background: 'transparent', border: 'none' }}
-            items={[
-              { key: 'lock', icon: <LockOutlined />, label: '隐私空间' },
-              { key: 'drive', icon: <CloudOutlined />, label: '我的资源' },
-              { key: 'share', icon: <ShareAltOutlined />, label: '来自：分享' },
-            ]}
+            items={roots.map(root => ({
+              key: root.id,
+              icon: <CloudOutlined />,
+              label: root.originalName,
+              onClick: () => setCurrentPath([{ id: root.id, name: root.originalName }])
+            }))}
           />
         </div>
       </Sider>
@@ -329,7 +380,12 @@ const Storage: React.FC = () => {
         }}>
           <Space size="large">
             <Space>
-              <Button type="text" icon={<LeftOutlined />} disabled={currentPath.length <= 1} onClick={() => navigateTo(currentPath[currentPath.length - 2])} />
+              <Button
+                type="text"
+                icon={<LeftOutlined />}
+                disabled={currentPath.length <= 1}
+                onClick={() => navigateTo(currentPath[currentPath.length - 2])}
+              />
               <Button type="text" icon={<RightOutlined />} disabled />
             </Space>
             <Breadcrumb>
@@ -341,7 +397,7 @@ const Storage: React.FC = () => {
             </Breadcrumb>
           </Space>
           <Space>
-            <Input prefix={<SearchOutlined />} placeholder="搜索" variant="filled" style={{ width: '200px', borderRadius: '6px' }} />
+            <Input prefix={<SearchOutlined />} placeholder="搜索" variant="filled" style={{ width: '180px', borderRadius: '6px' }} />
             <Button icon={<FolderAddOutlined />} onClick={handleCreateFolder}>新建文件夹</Button>
             <Upload customRequest={handleUpload} showUploadList={false} multiple>
               <Button type="primary" icon={<UploadOutlined />}>上传</Button>
@@ -360,7 +416,8 @@ const Storage: React.FC = () => {
             pagination={false}
             onRow={(record) => ({
               onClick: () => setSelectedFile(record),
-              onDoubleClick: () => {
+              onDoubleClick: (e) => {
+                e.stopPropagation();
                 if (record.type === 'folder') {
                   navigateTo({ id: record.id, name: record.originalName });
                 }

@@ -14,6 +14,7 @@ export interface FileInfo {
 export const fileApi = {
   listFiles: (parentId: string | null = null) => 
     apiClient.get<FileInfo[]>('/files', { params: { parentId } }),
+  fetchRoots: () => apiClient.get<FileInfo[]>('/files/roots'),
   uploadFile: (file: File, parentId: string | null = null) => {
     const formData = new FormData();
     formData.append('file', file);

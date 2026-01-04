@@ -1,4 +1,6 @@
 import mysql from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/mysql2';
+import * as schema from './schema.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,6 +14,7 @@ const dbConfig = {
 };
 
 let pool: mysql.Pool | null = null;
+let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 export const getDbPool = () => {
   if (!pool) {
@@ -23,6 +26,14 @@ export const getDbPool = () => {
     });
   }
   return pool;
+};
+
+export const getDb = () => {
+  if (!db) {
+    const connectionPool = getDbPool();
+    db = drizzle(connectionPool, { schema, mode: 'default' });
+  }
+  return db;
 };
 
 export const testDbConnection = async (): Promise<boolean> => {

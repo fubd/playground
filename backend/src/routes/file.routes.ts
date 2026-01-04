@@ -4,12 +4,32 @@ import { FileService } from '../services/file.service.js';
 const fileRoutes = new Hono();
 const fileService = new FileService();
 
+// Get root folders for sidebar
+fileRoutes.get('/roots', async (c) => {
+  try {
+    const roots = await fileService.getRoots();
+    return c.json(roots);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 // List all files
 fileRoutes.get('/', async (c) => {
   try {
     const parentId = c.req.query('parentId') || null;
     const files = await fileService.listFiles(parentId);
     return c.json(files);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Get root folders for sidebar
+fileRoutes.get('/roots', async (c) => {
+  try {
+    const roots = await fileService.getRoots();
+    return c.json(roots);
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
   }

@@ -1,5 +1,5 @@
-import { getDbPool } from '../db/connection.js';
-import { RowDataPacket } from 'mysql2';
+import { getDb } from '../db/connection.js';
+import { sql } from 'drizzle-orm';
 
 export interface Metric {
   id: number;
@@ -12,11 +12,9 @@ export class MetricsService {
   private tableName = 'system_metrics';
 
   async initTable() {
-    const pool = getDbPool();
-    if (!pool) return;
-
+    const db = getDb();
     try {
-      await pool.execute(`
+      await db.execute(sql.raw(`
         CREATE TABLE IF NOT EXISTS ${this.tableName} (
           id INT AUTO_INCREMENT PRIMARY KEY,
           cpu_load FLOAT NOT NULL,
@@ -24,7 +22,7 @@ export class MetricsService {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           INDEX idx_created_at (created_at)
         )
-      `);
+      `));
       console.log(`✓ Table ${this.tableName} initialized`);
     } catch (error) {
       console.error(`✗ Failed to initialize table ${this.tableName}:`, error);
@@ -32,13 +30,10 @@ export class MetricsService {
   }
 
   async saveMetric(cpuLoad: number, memoryUsage: number) {
-    const pool = getDbPool();
-    if (!pool) return;
-
+    const db = getDb();
     try {
-      await pool.execute(
-        `INSERT INTO ${this.tableName} (cpu_load, memory_usage) VALUES (?, ?)`,
-        [cpuLoad, memoryUsage]
+      await db.execute(
+        sql`INSERT INTO ${sql.raw(this.tableName)} (cpu_load, memory_usage) VALUES (${cpuLoad}, ${memoryUsage})`
       );
     } catch (error) {
       console.error('Failed to save metric:', error);
@@ -46,17 +41,14 @@ export class MetricsService {
   }
 
   async getHistory(limitMinutes = 60): Promise<Metric[]> {
-    const pool = getDbPool();
-    if (!pool) return [];
-
+    const db = getDb();
     try {
-      const [rows] = await pool.execute<RowDataPacket[] & Metric[]>(
-        `SELECT * FROM ${this.tableName} 
-         WHERE created_at >= NOW() - INTERVAL ? MINUTE 
-         ORDER BY created_at ASC`,
-        [limitMinutes]
+      const [rows] = await db.execute(
+        sql`SELECT * FROM ${sql.raw(this.tableName)} 
+         WHERE created_at >= NOW() - INTERVAL ${limitMinutes} MINUTE 
+         ORDER BY created_at ASC`
       );
-      return rows;
+      return rows as Metric[];
     } catch (error) {
       console.error('Failed to get history:', error);
       return [];
