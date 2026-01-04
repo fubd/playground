@@ -8,25 +8,20 @@ import {
 import './Dock.css';
 
 const Dock: React.FC = () => {
-  const location = useLocation();
-
   const menuItems = [
     {
       key: '/',
-      icon: <HomeOutlined />,
-      label: '首页',
+      label: '监控',
       path: '/'
     },
     {
       key: '/test1',
-      icon: <ExperimentOutlined />,
-      label: '测试 1',
+      label: '演示',
       path: '/test1'
     },
     {
       key: '/test2',
-      icon: <ThunderboltOutlined />,
-      label: '测试 2',
+      label: '实验',
       path: '/test2'
     }
   ];
@@ -40,9 +35,8 @@ const Dock: React.FC = () => {
             to={item.path}
             className={({ isActive }) => `dock-item ${isActive ? 'active' : ''}`}
           >
-            <span className="dock-item-icon">{item.icon}</span>
-            <span className="dock-label">{item.label}</span>
             <span className="active-dot"></span>
+            <span className="dock-label-text">{item.label}</span>
           </NavLink>
         ))}
       </div>
