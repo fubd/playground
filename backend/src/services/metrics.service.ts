@@ -66,7 +66,6 @@ export class MetricsService {
     try {
       if (range === '24h') {
         // Return 1-minute averages for the last 24 hours
-        // We use DATE_FORMAT in GROUP BY but select MIN(created_at) as the timestamp to get a real Date object
         const [rows] = await db.execute(sql`
           SELECT 
             MIN(id) as id,
@@ -75,14 +74,14 @@ export class MetricsService {
             MIN(created_at) as created_at
           FROM system_metrics
           WHERE created_at >= NOW() - INTERVAL 24 HOUR
-          GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')
+          GROUP BY FLOOR(UNIX_TIMESTAMP(created_at) / 60)
           ORDER BY created_at ASC
         `);
         return (rows as unknown as any[]).map(r => ({
           id: r.id,
           cpu_load: parseFloat(r.cpu_load),
           memory_usage: parseFloat(r.memory_usage),
-          created_at: r.created_at as Date
+          created_at: new Date(r.created_at)
         }));
       }
 
