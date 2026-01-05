@@ -1,4 +1,4 @@
-.PHONY: help dev-up dev-down dev-logs dev-rebuild dev-restart prod-up prod-down prod-logs prod-rebuild prod-restart db-shell db-backup db-restore clean status install-deps sync-deps
+.PHONY: help dev-up dev-down dev-logs dev-rebuild dev-restart prod-up prod-down prod-logs prod-rebuild prod-restart db-shell db-backup db-restore clean status install-deps sync-deps install
 
 # 默认目标
 help:
@@ -113,11 +113,27 @@ db-restore:
 # ==================== 工具命令 ====================
 
 install-deps:
-	@echo "📦 安装前端依赖..."
+	@echo "📦 安装所有依赖..."
 	cd frontend && npm install
-	@echo "📦 安装后端依赖..."
 	cd backend && npm install
 	@echo "✓ 依赖安装完成"
+
+install: install-deps
+
+sync-deps:
+	@echo "🔄 正在从容器镜像提取 node_modules 到宿主机..."
+	@# 停止正在运行的容器（以解除覆盖挂载）
+	docker compose stop backend frontend
+	@# 创建临时容器并拷贝
+	docker compose run --no-deps --rm backend sh -c "cp -r /app/node_modules /tmp_node_modules" || true
+	@# 上述方式较慢，推荐直接使用 cp 
+	docker create --name temp_backend $$(docker compose images -q backend)
+	docker cp temp_backend:/app/node_modules ./backend/
+	docker rm temp_backend
+	docker create --name temp_frontend $$(docker compose images -q frontend)
+	docker cp temp_frontend:/app/node_modules ./frontend/
+	docker rm temp_frontend
+	@echo "✓ 同步完成，请重新启动容器: make dev-up"
 
 sync-deps:
 	@echo "🔄 从容器同步 node_modules 到宿主机..."

@@ -23,6 +23,7 @@ export const getDbPool = () => {
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
+      timezone: '+00:00',
     });
   }
   return pool;

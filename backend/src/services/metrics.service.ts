@@ -86,19 +86,18 @@ export class MetricsService {
       }
 
       // Default 1h: Return raw data (10s interval)
-      const results = await db
-        .select()
-        .from(metrics)
-        .where(
-          sql`${metrics.createdAt} >= NOW() - INTERVAL 1 HOUR`
-        )
-        .orderBy(asc(metrics.createdAt));
+      const [rows] = await db.execute(sql`
+        SELECT id, cpu_load, memory_usage, created_at
+        FROM system_metrics
+        WHERE created_at >= NOW() - INTERVAL 1 HOUR
+        ORDER BY created_at ASC
+      `);
 
-      return results.map(r => ({
+      return (rows as unknown as any[]).map(r => ({
         id: r.id,
-        cpu_load: r.cpuLoad,
-        memory_usage: r.memoryUsage,
-        created_at: new Date(r.createdAt!)
+        cpu_load: r.cpu_load,
+        memory_usage: r.memory_usage,
+        created_at: new Date(r.created_at)
       }));
     } catch (error) {
       console.error('Failed to get history:', error);
