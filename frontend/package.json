@@ -9,7 +9,7 @@
     "format": "prettier --write .",
     "lint": "eslint .",
     "preview": "rsbuild preview",
-    "watch": "rsbuild build --watch"
+    "watch": "rsbuild build --watch --mode development"
   },
   "dependencies": {
     "antd": "^6.1.3",
