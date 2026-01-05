@@ -98,7 +98,7 @@ export class MetricsService {
         id: r.id,
         cpu_load: r.cpuLoad,
         memory_usage: r.memoryUsage,
-        created_at: r.createdAt as Date
+        created_at: new Date(r.createdAt!)
       }));
     } catch (error) {
       console.error('Failed to get history:', error);
