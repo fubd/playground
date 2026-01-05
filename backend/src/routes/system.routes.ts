@@ -24,7 +24,8 @@ systemRouter.get('/system-info', async (c) => {
 
 systemRouter.get('/metrics/history', async (c) => {
   try {
-    const history = await metricsService.getHistory();
+    const range = c.req.query('range') as '1h' | '24h' || '1h';
+    const history = await metricsService.getHistory(range);
     return c.json(history);
   } catch (error) {
     console.error('Error in /metrics/history:', error);

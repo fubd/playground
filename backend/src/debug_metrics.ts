@@ -9,7 +9,7 @@ async function debug() {
   }
 
   const metricsService = new MetricsService();
-  const history = await metricsService.getHistory(10080); // Get last 7 days
+  const history = await metricsService.getHistory('24h'); // Get last 24h as a test
   console.log('History count (7 days):', history.length);
   if (history.length > 0) {
     console.log('Latest record:', history[history.length - 1]);
