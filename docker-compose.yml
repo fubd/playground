@@ -13,7 +13,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./database/data:/var/lib/mysql
       - ./database/init:/docker-entrypoint-initdb.d:ro
     networks:
       - server-monitor-network
@@ -76,15 +76,31 @@ services:
       - ./frontend/public:/app/public:ro
       - ./frontend/rsbuild.config.ts:/app/rsbuild.config.ts:ro
       - ./frontend/node_modules:/app/node_modules
-      - ./frontend/node_modules:/app/node_modules
+      - ./frontend/dist:/app/dist
+    command: npm run watch
     networks:
       - server-monitor-network
     depends_on:
       - backend
 
+  # Nginx (开发环境 - 用于实时预览构建产物)
+  nginx:
+    image: nginx:alpine
+    container_name: server-monitor-nginx-dev
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT}:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - uploads_data:/usr/share/nginx/uploads:ro
+    networks:
+      - server-monitor-network
+    depends_on:
+      - frontend
+      - backend
+
 volumes:
-  mysql_data:
-    driver: local
   uploads_data:
     driver: local
 

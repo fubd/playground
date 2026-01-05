@@ -34,8 +34,9 @@ dev-up:
 	@echo "🚀 启动开发环境..."
 	docker compose up -d
 	@echo "✓ 开发环境已启动"
-	@echo "📍 前端: http://localhost:26030"
-	@echo "📍 后端: http://localhost:26031"
+	@echo "📍 前端 (Nginx 代理): http://localhost:26033"
+	@echo "📍 前端 (Rsbuild 监控): http://localhost:26030"
+	@echo "📍 后端 API: http://localhost:26031"
 	@echo "📍 MySQL: localhost:26032"
 
 dev-down:
