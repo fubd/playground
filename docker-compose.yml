@@ -43,8 +43,8 @@ services:
     ports:
       - "${BACKEND_PORT}:3001"
     volumes:
-      - ./backend/src:/app/src:ro
-      - ./backend/package.json:/app/package.json:ro
+      - ./backend:/app
+      - /app/node_modules
       - uploads_data:/app/uploads
     networks:
       - server-monitor-network
