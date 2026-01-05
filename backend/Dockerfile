@@ -3,8 +3,8 @@ FROM node:20-slim AS development
 
 WORKDIR /app
 
-# COPY package*.json ./
-# RUN npm install
+COPY package*.json ./
+RUN npm install
 
 COPY . .
 
