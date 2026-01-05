@@ -87,8 +87,8 @@ testDbConnection().then(async (connected) => {
     const todoService = new TodoService();
     const fileService = new FileService();
     
-    await metricsService.clearHistory();
     await metricsService.initTable();
+    await metricsService.clearHistory();
     await todoService.initTable();
     await fileService.initTable();
     console.log('✓ Tables checked/initialized');
