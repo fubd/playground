@@ -1,4 +1,4 @@
-.PHONY: help dev-up dev-down dev-logs dev-rebuild dev-restart prod-up prod-down prod-logs prod-rebuild prod-restart db-shell db-backup db-restore clean status install-deps
+.PHONY: help dev-up dev-down dev-logs dev-rebuild dev-restart prod-up prod-down prod-logs prod-rebuild prod-restart db-shell db-backup db-restore clean status install-deps sync-deps
 
 # 默认目标
 help:
@@ -118,6 +118,12 @@ install-deps:
 	@echo "📦 安装后端依赖..."
 	cd backend && npm install
 	@echo "✓ 依赖安装完成"
+
+sync-deps:
+	@echo "🔄 从容器同步 node_modules 到宿主机..."
+	docker cp server-monitor-backend-dev:/app/node_modules ./backend/
+	docker cp server-monitor-frontend-dev:/app/node_modules ./frontend/
+	@echo "✓ 同步完成"
 
 clean:
 	@echo "🧹 清理所有容器、卷和镜像..."
