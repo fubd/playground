@@ -180,13 +180,17 @@ const HistoryChart: React.FC = () => {
     <Card
       title={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>
+          <div>
             <LineChartOutlined /> 历史趋势
-          </span>
-          <Radio.Group value={range} onChange={handleRangeChange} size="small">
-            <Radio.Button value="1h">最近1h</Radio.Button>
-            <Radio.Button value="24h">最近24h</Radio.Button>
-          </Radio.Group>
+            <div style={{fontSize: 'initial', fontWeight: 'initial', display: 'inline-flex', marginLeft: 8}}>
+              <Radio.Group value={range} onChange={handleRangeChange} size="small">
+                <Radio.Button value="1h">最近1h</Radio.Button>
+                <Radio.Button value="24h">最近24h</Radio.Button>
+              </Radio.Group>
+            </div>
+          </div>
+
+
         </div>
       }
       className="chart-card"
