@@ -1,5 +1,6 @@
 import { getDb } from '../db/connection.js';
-import { sql } from 'drizzle-orm';
+import { sql, gt, asc } from 'drizzle-orm';
+import { metrics } from '../db/schema.js';
 
 export interface Metric {
   id: number;
@@ -32,9 +33,10 @@ export class MetricsService {
   async saveMetric(cpuLoad: number, memoryUsage: number) {
     const db = getDb();
     try {
-      await db.execute(
-        sql`INSERT INTO ${sql.raw(this.tableName)} (cpu_load, memory_usage) VALUES (${cpuLoad}, ${memoryUsage})`
-      );
+      await db.insert(metrics).values({
+        cpuLoad,
+        memoryUsage
+      });
     } catch (error) {
       console.error('Failed to save metric:', error);
     }
@@ -43,12 +45,21 @@ export class MetricsService {
   async getHistory(limitMinutes = 60): Promise<Metric[]> {
     const db = getDb();
     try {
-      const [rows] = await db.execute(
-        sql`SELECT * FROM ${sql.raw(this.tableName)} 
-         WHERE created_at >= NOW() - INTERVAL ${limitMinutes} MINUTE 
-         ORDER BY created_at ASC`
-      );
-      return rows as Metric[];
+      const results = await db
+        .select()
+        .from(metrics)
+        .where(
+          sql`${metrics.createdAt} >= NOW() - INTERVAL ${limitMinutes} MINUTE`
+        )
+        .orderBy(asc(metrics.createdAt));
+
+      // Map back to the expected Metric interface (frontend expects snake_case)
+      return results.map(r => ({
+        id: r.id,
+        cpu_load: r.cpuLoad,
+        memory_usage: r.memoryUsage,
+        created_at: r.createdAt as Date
+      }));
     } catch (error) {
       console.error('Failed to get history:', error);
       return [];

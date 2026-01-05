@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, bigint, timestamp, mysqlEnum, int, boolean as drizzleBoolean, text } from 'drizzle-orm/mysql-core';
+import { mysqlTable, varchar, bigint, timestamp, mysqlEnum, int, boolean as drizzleBoolean, float } from 'drizzle-orm/mysql-core';
 
 export const files = mysqlTable('files', {
   id: varchar('id', { length: 36 }).primaryKey(),
@@ -20,7 +20,7 @@ export const todos = mysqlTable('todos', {
 
 export const metrics = mysqlTable('system_metrics', {
   id: int('id').primaryKey().autoincrement(),
-  cpuLoad: text('cpu_load').notNull(), // text or float, MetricsService uses FLOAT in initTable
-  memoryUsage: text('memory_usage').notNull(),
+  cpuLoad: float('cpu_load').notNull(),
+  memoryUsage: float('memory_usage').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
