@@ -48,11 +48,18 @@ dev-logs:
 	docker compose logs -f
 
 dev-rebuild:
-	@echo "🔨 重建开发环境..."
+	@echo "🛠️  重新构建开发镜像..."
 	docker compose down
 	docker compose build --no-cache
 	docker compose up -d
-	@echo "✓ 开发环境重建完成"
+	@echo "✓ 构建完成"
+
+dev-clean-up:
+	@echo "🧹 清除存量卷并重新启动..."
+	docker compose down -v
+	docker compose build --no-cache
+	docker compose up -d
+	@echo "✓ 环境已重置并启动"
 
 dev-restart:
 	@echo "🔄 重启开发环境服务..."
