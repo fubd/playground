@@ -1,5 +1,5 @@
 # 多阶段构建 - 开发阶段
-FROM node:20-alpine AS development
+FROM node:20-slim AS development
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 # 多阶段构建 - 生产构建阶段
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 

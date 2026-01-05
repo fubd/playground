@@ -1,5 +1,5 @@
 # 开发阶段
-FROM node:20-alpine AS development
+FROM node:20-slim AS development
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ EXPOSE 3001
 CMD ["npm", "run", "dev"]
 
 # 生产构建阶段
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ COPY . .
 RUN npm run build
 
 # 生产运行阶段
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
