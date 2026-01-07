@@ -1,8 +1,31 @@
 import React, { useEffect, useState, useRef } from 'react';
-import ReactECharts from 'echarts-for-react';
+// --- 核心修改：不再直接引入 ReactECharts，而是引入核心工具 ---
+import ReactEChartsCore from 'echarts-for-react/lib/core';
+import * as echarts from 'echarts/core';
+
+// --- 按需引入你需要的图表类型和组件 ---
+import { LineChart } from 'echarts/charts'; // 只要折线图
+import {
+  GridComponent,
+  TooltipComponent,
+  TitleComponent,
+  LegendComponent,
+} from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers'; // 使用 Canvas 渲染，体积更小
+
 import { Card, Alert, Radio, type RadioChangeEvent } from 'antd';
 import { LineChartOutlined } from '@ant-design/icons';
 import apiClient from '../api/client';
+
+// --- 注册必须的组件 ---
+echarts.use([
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  LineChart,
+  CanvasRenderer,
+]);
 
 export interface Metric {
   id: number;
@@ -17,7 +40,6 @@ const HistoryChart: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState<'1h' | '24h'>('1h');
 
-  // Use ref to track mounted state to prevent state updates on unmount
   const isMounted = useRef(true);
 
   const fetchData = async (currentRange = range) => {
@@ -51,7 +73,6 @@ const HistoryChart: React.FC = () => {
       isMounted.current = false;
       clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range]);
 
   const handleRangeChange = (e: RadioChangeEvent) => {
@@ -80,15 +101,11 @@ const HistoryChart: React.FC = () => {
     return {
       tooltip: {
         trigger: 'axis',
-        axisPointer: {
-          type: 'cross',
-        },
+        axisPointer: { type: 'cross' },
       },
       legend: {
         data: ['CPU 负载 (%)', '内存使用 (%)'],
-        textStyle: {
-          color: '#666',
-        },
+        textStyle: { color: '#666' },
         bottom: 0
       },
       grid: {
@@ -111,15 +128,8 @@ const HistoryChart: React.FC = () => {
       yAxis: {
         type: 'value',
         max: 100,
-        axisLabel: {
-          color: '#888',
-        },
-        splitLine: {
-          lineStyle: {
-            type: 'dashed',
-            color: '#eee',
-          },
-        },
+        axisLabel: { color: '#888' },
+        splitLine: { lineStyle: { type: 'dashed', color: '#eee' } },
       },
       series: [
         {
@@ -127,16 +137,9 @@ const HistoryChart: React.FC = () => {
           type: 'line',
           smooth: true,
           showSymbol: false,
-          areaStyle: {
-            opacity: 0.1,
-            color: '#1890ff',
-          },
-          itemStyle: {
-            color: '#1890ff',
-          },
-          tooltip: {
-            valueFormatter: (value: number) => value.toFixed(2)
-          },
+          areaStyle: { opacity: 0.1, color: '#1890ff' },
+          itemStyle: { color: '#1890ff' },
+          tooltip: { valueFormatter: (value: number) => value.toFixed(2) },
           data: data.map((item) => item.cpu_load),
         },
         {
@@ -144,16 +147,9 @@ const HistoryChart: React.FC = () => {
           type: 'line',
           smooth: true,
           showSymbol: false,
-          areaStyle: {
-            opacity: 0.1,
-            color: '#52c41a',
-          },
-          itemStyle: {
-            color: '#52c41a',
-          },
-          tooltip: {
-            valueFormatter: (value: number) => value.toFixed(2)
-          },
+          areaStyle: { opacity: 0.1, color: '#52c41a' },
+          itemStyle: { color: '#52c41a' },
+          tooltip: { valueFormatter: (value: number) => value.toFixed(2) },
           data: data.map((item) => item.memory_usage),
         },
       ],
@@ -162,7 +158,7 @@ const HistoryChart: React.FC = () => {
 
   if (loading && data.length === 0) {
     return (
-      <Card className="chart-card" bordered={false} loading>
+      <Card bordered={false} loading>
         <div style={{ height: 300 }} />
       </Card>
     );
@@ -170,7 +166,7 @@ const HistoryChart: React.FC = () => {
 
   if (error && data.length === 0) {
     return (
-      <Card className="chart-card" bordered={false}>
+      <Card bordered={false}>
         <Alert message="无法加载历史数据" type="error" showIcon />
       </Card>
     );
@@ -182,23 +178,22 @@ const HistoryChart: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <LineChartOutlined /> 历史趋势
-            <div style={{fontSize: 'initial', fontWeight: 'initial', display: 'inline-flex', marginLeft: 8}}>
+            <div style={{ marginLeft: 8, display: 'inline-flex' }}>
               <Radio.Group value={range} onChange={handleRangeChange} size="small">
                 <Radio.Button value="1h">最近1h</Radio.Button>
                 <Radio.Button value="24h">最近24h</Radio.Button>
               </Radio.Group>
             </div>
           </div>
-
-
         </div>
       }
-      className="chart-card"
       bordered={false}
       style={{ marginTop: 24 }}
     >
       <div style={{ height: 350, width: '100%' }}>
-        <ReactECharts
+        {/* --- 关键：使用 ReactEChartsCore 并传入配置好的 echarts 实例 --- */}
+        <ReactEChartsCore
+          echarts={echarts}
           option={getOption()}
           style={{ height: '100%', width: '100%' }}
           notMerge={true}

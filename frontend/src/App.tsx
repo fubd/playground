@@ -20,7 +20,7 @@ const App: React.FC = () => {
           fontSize: 16,
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         },
-        algorithm: theme.defaultAlgorithm,
+        // algorithm: theme.defaultAlgorithm,
       }}
     >
       <AppRouter />

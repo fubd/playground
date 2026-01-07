@@ -29,4 +29,21 @@ export default defineConfig({
   output: {
     assetPrefix: '/',
   },
+  performance: {
+    // 开启 Bundle 分析，看看到底是什么占用了空间
+    // bundleAnalyze: {}, 
+    chunkSplit: {
+      strategy: 'split-by-experience',
+    },
+    buildCache: true,
+  },
+  tools: {
+     rspack: (config, { appendPlugins, rspack }) => {
+       // 过滤 dayjs 的语言包，只保留中文
+       appendPlugins(new rspack.IgnorePlugin({
+         resourceRegExp: /^\.\/locale$/,
+         contextRegExp: /dayjs$/,
+       }));
+     },
+  },
 });
