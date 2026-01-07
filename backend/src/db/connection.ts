@@ -34,7 +34,7 @@ export const getDb = () => {
     const connectionPool = getDbPool();
     db = drizzle(connectionPool, { schema, mode: 'default' });
   }
-  return db;
+  return db!;
 };
 
 export const testDbConnection = async (): Promise<boolean> => {

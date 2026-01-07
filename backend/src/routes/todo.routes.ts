@@ -3,7 +3,6 @@ import { TodoService } from '../services/todo.service.js';
 
 const todoRouter = new Hono();
 const todoService = new TodoService();
-
 todoRouter.get('/', async (c) => {
   const todos = await todoService.getAll();
   return c.json(todos);

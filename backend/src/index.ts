@@ -7,11 +7,13 @@ import dotenv from 'dotenv';
 import systemRouter from './routes/system.routes.js';
 import todoRouter from './routes/todo.routes.js';
 import fileRouter from './routes/file.routes.js';
+import mockRouter from './routes/mock.routes.js'
 import { testDbConnection } from './db/connection.js';
 import { SystemService } from './services/system.service.js';
 import { MetricsService } from './services/metrics.service.js';
 import { TodoService } from './services/todo.service.js';
 import { FileService } from './services/file.service.js';
+import { MockService } from './services/mock.service.js';
 
 dotenv.config();
 
@@ -48,6 +50,7 @@ app.get('/health', (c) => {
 app.route('/api', systemRouter);
 app.route('/api/todos', todoRouter);
 app.route('/api/files', fileRouter);
+app.route('/api/mock', mockRouter);
 
 // 404 处理
 app.notFound((c) => {
@@ -86,11 +89,16 @@ testDbConnection().then(async (connected) => {
     const metricsService = new MetricsService();
     const todoService = new TodoService();
     const fileService = new FileService();
+    const mockService = new MockService();
     
     await metricsService.initTable();
     // await metricsService.clearHistory();
     await todoService.initTable();
     await fileService.initTable();
+
+    await mockService.initTable();
+
+
     console.log('✓ Tables checked/initialized');
 
     // 启动 10s 定时采集
