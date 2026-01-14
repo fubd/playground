@@ -28,6 +28,7 @@ export default defineConfig({
   },
   output: {
     assetPrefix: '/',
+    legalComments: 'none',
   },
   performance: {
     // 开启 Bundle 分析，看看到底是什么占用了空间
