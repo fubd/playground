@@ -1,4 +1,5 @@
 import si from 'systeminformation';
+import { injectable } from 'inversify';
 
 export interface SystemInfo {
   memory: {
@@ -25,6 +26,7 @@ export interface SystemInfo {
   };
 }
 
+@injectable()
 export class SystemService {
   constructor() {
     // 如果在 Docker 容器中并挂载了宿主机文件系统，告诉 systeminformation 读取宿主机信息

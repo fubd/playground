@@ -1,6 +1,6 @@
-import { getDb } from '../db/connection.js';
-import { sql, gt, asc } from 'drizzle-orm';
-import { metrics } from '../db/schema.js';
+import { injectable } from 'inversify';
+import { execute } from '../db/connection.js';
+import { sql } from 'drizzle-orm';
 
 export interface Metric {
   id: number;
@@ -9,64 +9,34 @@ export interface Metric {
   created_at: Date;
 }
 
+@injectable()
 export class MetricsService {
-  private tableName = 'system_metrics';
-
+  
   async clearHistory() {
-    const db = getDb();
-    if (!db) return;
     try {
-      await db.execute(sql`TRUNCATE TABLE ${sql.raw(this.tableName)}`);
+      await execute(sql`DELETE FROM system_metrics`);
       console.log('✓ Metrics table cleared');
     } catch (error) {
       console.error('Failed to clear metrics table:', error);
     }
   }
 
-  async initTable() {
-    const db = getDb();
-    if (!db) return;
-    try {
-      await db.execute(sql.raw(`
-        CREATE TABLE IF NOT EXISTS ${this.tableName} (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          cpu_load FLOAT NOT NULL,
-          memory_usage FLOAT NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_created_at (created_at)
-        )
-      `));
-      console.log(`✓ Table ${this.tableName} initialized`);
-    } catch (error) {
-      console.error(`✗ Failed to initialize table ${this.tableName}:`, error);
-    }
-  }
-
   async saveMetric(cpuLoad: number, memoryUsage: number) {
-    const db = getDb();
-    if (!db) return;
     try {
-      await db.insert(metrics).values({
-        cpuLoad,
-        memoryUsage
-      });
+      await execute(sql`INSERT INTO system_metrics (cpu_load, memory_usage) VALUES (${cpuLoad}, ${memoryUsage})`);
 
       // Maintain only 48h data
-      await db.execute(
-        sql`DELETE FROM ${sql.raw(this.tableName)} WHERE created_at < NOW() - INTERVAL 48 HOUR`
-      );
+      await execute(sql`DELETE FROM system_metrics WHERE created_at < NOW() - INTERVAL 48 HOUR`);
+
     } catch (error) {
       console.error('Failed to save metric:', error);
     }
   }
 
   async getHistory(range: '1h' | '24h' = '1h'): Promise<Metric[]> {
-    const db = getDb();
-    if (!db) return [];
     try {
       if (range === '24h') {
-        // Return 1-minute averages for the last 24 hours
-        const [rows] = await db.execute(sql`
+        const rows = await execute<any>(sql`
           SELECT 
             MIN(id) as id,
             AVG(cpu_load) as cpu_load,
@@ -77,7 +47,7 @@ export class MetricsService {
           GROUP BY FLOOR(UNIX_TIMESTAMP(created_at) / 60)
           ORDER BY created_at ASC
         `);
-        return (rows as unknown as any[]).map(r => ({
+        return rows.map((r: any) => ({
           id: r.id,
           cpu_load: parseFloat(r.cpu_load),
           memory_usage: parseFloat(r.memory_usage),
@@ -86,19 +56,20 @@ export class MetricsService {
       }
 
       // Default 1h: Return raw data (10s interval)
-      const [rows] = await db.execute(sql`
-        SELECT id, cpu_load, memory_usage, created_at
-        FROM system_metrics
-        WHERE created_at >= NOW() - INTERVAL 1 HOUR
-        ORDER BY created_at ASC
+      const rows = await execute<any>(sql`
+          SELECT id, cpu_load, memory_usage, created_at
+          FROM system_metrics
+          WHERE created_at >= NOW() - INTERVAL 1 HOUR
+          ORDER BY created_at ASC
       `);
 
-      return (rows as unknown as any[]).map(r => ({
+      return rows.map((r: any) => ({
         id: r.id,
         cpu_load: r.cpu_load,
         memory_usage: r.memory_usage,
-        created_at: new Date(r.created_at)
+        created_at: r.created_at ? new Date(r.created_at) : new Date()
       }));
+
     } catch (error) {
       console.error('Failed to get history:', error);
       return [];

@@ -48,16 +48,10 @@ dev-logs:
 	docker compose logs -f
 
 dev-rebuild:
-	@echo "🛠️  重新构建开发镜像..."
-	docker compose down
-	docker compose build
-	docker compose up -d
-	@echo "✓ 构建完成"
-
-dev-clean-up:
 	@echo "🧹 清除存量卷并重新启动..."
 	docker compose down
 	docker compose build --no-cache
+	docker image prune -f
 	docker compose up -d
 	@echo "✓ 环境已重置并启动"
 
@@ -133,6 +127,8 @@ clean:
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
 		docker compose down -v --rmi all; \
 		docker compose -f docker compose.prod.yml down -v --rmi all; \
+		echo "🧹 Pruning system..." ; \
+		docker system prune -f; \
 		echo "✓ 清理完成"; \
 	else \
 		echo "❌ 已取消"; \

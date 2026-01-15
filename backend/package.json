@@ -25,7 +25,9 @@
     "drizzle-orm": "^0.45.1",
     "fs-extra": "^11.3.3",
     "hono": "^4.11.3",
+    "inversify": "^7.11.0",
     "mysql2": "^3.16.0",
+    "reflect-metadata": "^0.2.2",
     "systeminformation": "^5.28.9",
     "uuid": "^13.0.0"
   },

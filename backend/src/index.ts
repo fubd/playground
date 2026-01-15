@@ -1,26 +1,31 @@
+import 'reflect-metadata';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { serveStatic } from '@hono/node-server/serve-static';
 import dotenv from 'dotenv';
-import systemRouter from './routes/system.routes.js';
-import todoRouter from './routes/todo.routes.js';
-import fileRouter from './routes/file.routes.js';
-import mockRouter from './routes/mock.routes.js'
-import { testDbConnection } from './db/connection.js';
-import { SystemService } from './services/system.service.js';
+import { container } from './container.js';
+import { TYPES } from './types.js';
+import { testDbConnection, initDatabase } from './db/connection.js';
 import { MetricsService } from './services/metrics.service.js';
-import { TodoService } from './services/todo.service.js';
+import { SystemService } from './services/system.service.js';
 import { FileService } from './services/file.service.js';
-import { MockService } from './services/mock.service.js';
+
+// Framework & Controllers
+import { registerControllers } from './framework/registrar.js';
+import { MockController } from './controllers/mock.controller.js';
+import { TodoController } from './controllers/todo.controller.js';
+import { MetricsController } from './controllers/metrics.controller.js';
+import { SystemController } from './controllers/system.controller.js';
+import { FileController } from './controllers/file.controller.js';
 
 dotenv.config();
 
 const app = new Hono();
 
 // Debug Env
-console.log('--- Backend Service v2.2 (Auto-Detect Host) Starting ---');
+console.log('--- Backend Service v2.3 (Decorator Routing) Starting ---');
 console.log('Environment Keys:', Object.keys(process.env).sort());
 console.log('FS_PREFIX value:', process.env.FS_PREFIX);
 
@@ -46,11 +51,18 @@ app.get('/health', (c) => {
   });
 });
 
-// API 路由
-app.route('/api', systemRouter);
-app.route('/api/todos', todoRouter);
-app.route('/api/files', fileRouter);
-app.route('/api/mock', mockRouter);
+// 自动注册控制器路由
+registerControllers(
+  app,
+  [
+    SystemController,
+    TodoController,
+    FileController,
+    MetricsController,
+    MockController,
+  ],
+  container
+);
 
 // 404 处理
 app.notFound((c) => {
@@ -76,30 +88,24 @@ console.log('🚀 Starting server...');
 console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`🔌 Port: ${port}`);
 
-// 测试数据库连接（可选）
-// ... imports
-
-// 测试数据库连接（可选）
+// 初始化数据库连接
 testDbConnection().then(async (connected) => {
   if (connected) {
-    console.log('✓ Database is ready');
+    console.log('✓ Database is connected');
     
-    // 初始化指标服务
-    const systemService = new SystemService();
-    const metricsService = new MetricsService();
-    const todoService = new TodoService();
-    const fileService = new FileService();
-    const mockService = new MockService();
+    // 运行迁移
+    await initDatabase();
+
+    // 解决 Service 依赖
+    const systemService = container.get<SystemService>(TYPES.SystemService);
+    const metricsService = container.get<MetricsService>(TYPES.MetricsService);
+    const fileService = container.get<FileService>(TYPES.FileService);
     
-    await metricsService.initTable();
-    // await metricsService.clearHistory();
-    await todoService.initTable();
-    await fileService.initTable();
+    // 初始化一些基础数据
+    await metricsService.clearHistory(); // Optional, per requirement
+    await fileService.ensureRootFolder();
 
-    await mockService.initTable();
-
-
-    console.log('✓ Tables checked/initialized');
+    console.log('✓ Services initialized');
 
     // 启动 10s 定时采集
     setInterval(async () => {

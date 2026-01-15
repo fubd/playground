@@ -6,7 +6,9 @@ ARG NGINX_IMAGE=registry.cn-hangzhou.aliyuncs.com/fubd_own/nginx:alpine
 FROM ${NODE_IMAGE} AS development
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+# 开发环境通常需要频繁变更，使用 install 并挂载缓存
+RUN --mount=type=cache,target=/root/.npm \
+    npm install
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
@@ -15,8 +17,9 @@ CMD ["npm", "run", "dev"]
 FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 COPY package*.json ./
-# 注意：构建前端通常需要全部依赖（包括 devDeps），建议用 npm install 或 npm ci
-RUN npm install
+# 生产构建使用 ci 保证 lock 文件一致性，并利用缓存
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 COPY . .
 RUN npm run build
 

@@ -16,6 +16,8 @@ const dbConfig = {
 let pool: mysql.Pool | null = null;
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+
 export const getDbPool = () => {
   if (!pool) {
     pool = mysql.createPool({
@@ -32,9 +34,22 @@ export const getDbPool = () => {
 export const getDb = () => {
   if (!db) {
     const connectionPool = getDbPool();
-    db = drizzle(connectionPool, { schema, mode: 'default' });
+    db = drizzle(connectionPool, { schema, mode: 'default' }) as any;
   }
   return db!;
+};
+
+export const initDatabase = async () => {
+  try {
+    const db = getDb();
+    console.log('📦 Running database migrations...');
+    await migrate(db, { migrationsFolder: './drizzle' });
+    console.log('✓ Database migrations completed');
+    return true;
+  } catch (error) {
+    console.error('✗ Database migration failed:', error);
+    return false;
+  }
 };
 
 export const testDbConnection = async (): Promise<boolean> => {
@@ -47,4 +62,12 @@ export const testDbConnection = async (): Promise<boolean> => {
     console.error('✗ Database connection failed:', error);
     return false;
   }
+};
+
+import { SQL } from 'drizzle-orm';
+
+export const execute = async <T = any>(query: SQL): Promise<any> => {
+  const db = getDb();
+  const [rows] = await db.execute(query);
+  return rows;
 };

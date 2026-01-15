@@ -45,6 +45,7 @@ services:
     volumes:
       - ./backend:/app
       - uploads_data:/app/uploads
+      - /app/node_modules
     networks:
       - server-monitor-network
     depends_on:
@@ -72,6 +73,7 @@ services:
     volumes:
       - ./frontend:/app
       - ./frontend/dist:/app/dist
+      - /app/node_modules
     command: npm run watch
     networks:
       - server-monitor-network
