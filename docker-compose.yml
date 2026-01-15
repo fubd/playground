@@ -44,7 +44,6 @@ services:
       - "${BACKEND_PORT}:3001"
     volumes:
       - ./backend:/app
-      - /app/node_modules
       - uploads_data:/app/uploads
     networks:
       - server-monitor-network
@@ -72,7 +71,6 @@ services:
       - "${FRONTEND_PORT}:3000"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
       - ./frontend/dist:/app/dist
     command: npm run watch
     networks:

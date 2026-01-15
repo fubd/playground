@@ -1,4 +1,6 @@
-FROM nginx:alpine
+ARG NGINX_IMAGE=registry.cn-hangzhou.aliyuncs.com/fubd_own/nginx:alpine
+
+FROM ${NGINX_IMAGE}
 
 # 复制自定义 nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf
