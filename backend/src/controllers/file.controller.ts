@@ -82,9 +82,9 @@ export class FileController {
     return c.json({ success });
   }
 
-  @Delete('/delete')
+  @Delete('/:id')
   public async delete(c: Context) {
-    const id = c.req.query('id');
+    const id = c.req.param('id');
     if (!id) return c.json({ error: 'ID missing' }, 400);
     const success = await this.fileService.deleteFile(id);
     return c.json({ success });
