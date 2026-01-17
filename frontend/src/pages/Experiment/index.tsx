@@ -272,8 +272,8 @@ const Storage: React.FC = () => {
   ];
 
   const getAsideFolderMenuItems = (record: FileInfo) => [
-    { key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: (e: any) => { e.domEvent.stopPropagation(); setRenameId(record.id); setRenameValue(record.originalName); } },
-    { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: (e: any) => { e.domEvent.stopPropagation(); handleDelete(record.id); } },
+    { key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: () => { setRenameId(record.id); setRenameValue(record.originalName); } },
+    { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.id) },
   ];
 
   const getAsideBgMenuItems = () => [
