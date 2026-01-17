@@ -295,7 +295,7 @@ const Storage: React.FC = () => {
         <div
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 0' }}
           onClick={(e) => {
-            if (e.button !== 0) return;
+            if (e.button !== 0 || renameId === record.id) return;
             e.stopPropagation();
             if (record.type === 'folder') {
               navigateTo({ id: record.id, name: record.originalName });
@@ -496,13 +496,13 @@ const Storage: React.FC = () => {
                 pagination={false}
                 onRow={(record) => ({
                   onClick: (e: any) => {
-                    if (e.button === 0) {
+                    if (e.button === 0 && renameId !== record.id) {
                       setSelectedFile(record);
                     }
                   },
                   onDoubleClick: (e) => {
                     e.stopPropagation();
-                    if (record.type === 'folder') {
+                    if (record.type === 'folder' && renameId !== record.id) {
                       navigateTo({ id: record.id, name: record.originalName });
                     }
                   },
