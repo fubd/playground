@@ -155,6 +155,7 @@ const Storage: React.FC = () => {
           message.success('删除成功');
           if (selectedFile?.id === id) setSelectedFile(null);
           fetchFiles(currentFolderId, searchQuery || null);
+          fetchRoots();
         } catch (err) {
           console.error('Delete error:', err);
           message.error('删除失败');
@@ -173,6 +174,7 @@ const Storage: React.FC = () => {
       message.success('重命名成功');
       setRenameId(null);
       fetchFiles(currentFolderId, searchQuery || null);
+      fetchRoots();
     } catch (err) {
       message.error('重命名失败');
     }
