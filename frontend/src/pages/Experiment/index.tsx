@@ -405,17 +405,30 @@ const Storage: React.FC = () => {
                 icon: <CloudOutlined />,
                 label: (
                   <Dropdown menu={{ items: getAsideFolderMenuItems(root) }} trigger={['contextMenu']}>
-                    <span
-                      style={{ width: '100%', display: 'inline-block' }}
-                      onContextMenu={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        if (e.button === 0) {
-                          setCurrentPath([{ id: root.id, name: root.originalName }]);
-                        }
-                      }}
-                    >
-                      {root.originalName}
-                    </span>
+                    {renameId === root.id ? (
+                      <Input
+                        autoFocus
+                        value={renameValue}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onBlur={() => handleRename(root.id)}
+                        onPressEnter={() => handleRename(root.id)}
+                        onClick={e => e.stopPropagation()}
+                        size="small"
+                        style={{ width: '100%' }}
+                      />
+                    ) : (
+                      <span
+                        style={{ width: '100%', display: 'inline-block' }}
+                        onContextMenu={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          if (e.button === 0) {
+                            setCurrentPath([{ id: root.id, name: root.originalName }]);
+                          }
+                        }}
+                      >
+                        {root.originalName}
+                      </span>
+                    )}
                   </Dropdown>
                 ),
               }))}
