@@ -18,7 +18,7 @@ export class FileController {
     try {
       const body = await c.req.parseBody();
       const file = body['file'];
-      const currentDirId = body['currentDirId'] as string | undefined;
+      const parentId = body['parentId'] as string | undefined;
 
       if (!file || !(file instanceof File)) {
          return c.json({ error: 'No file uploaded' }, 400);
@@ -29,7 +29,7 @@ export class FileController {
         file.name,
         file.type,
         file.size,
-        currentDirId || null
+        parentId || null
       );
       return c.json(fileInfo);
     } catch (err) {
