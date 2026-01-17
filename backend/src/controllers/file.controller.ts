@@ -62,7 +62,8 @@ export class FileController {
 
   @Put('/:id/rename')
   public async rename(c: Context) {
-    const { id, name } = await c.req.json();
+    const id = c.req.param('id');
+    const { name } = await c.req.json();
     if (!id || !name) return c.json({ error: 'Params missing' }, 400);
     const success = await this.fileService.renameItem(id, name);
     return c.json({ success });
