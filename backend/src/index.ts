@@ -102,7 +102,7 @@ testDbConnection().then(async (connected) => {
     const fileService = container.get<FileService>(TYPES.FileService);
     
     // 初始化一些基础数据
-    await metricsService.clearHistory(); // Optional, per requirement
+    // await metricsService.clearHistory(); // Disable to preserve data across restarts
     await fileService.ensureRootFolder();
 
     console.log('✓ Services initialized');
