@@ -18,9 +18,17 @@ export class FileController {
     try {
       const body = await c.req.parseBody();
       const file = body['file'];
-      const parentId = body['parentId'] as string | undefined;
+      const parentIdRaw = body['parentId'];
+      const parentId = (parentIdRaw === 'null' || !parentIdRaw) ? null : parentIdRaw as string;
+
+      console.log('📤 Upload Request:', {
+        fileName: file instanceof File ? file.name : 'Not a file',
+        parentIdRaw,
+        parentIdProcessed: parentId
+      });
 
       if (!file || !(file instanceof File)) {
+         console.warn('⚠️ Upload failed: No file or invalid file instance');
          return c.json({ error: 'No file uploaded' }, 400);
       }
 
@@ -29,7 +37,7 @@ export class FileController {
         file.name,
         file.type,
         file.size,
-        parentId || null
+        parentId
       );
       return c.json(fileInfo);
     } catch (err) {
@@ -40,9 +48,14 @@ export class FileController {
 
   @Get('/')
   public async listFiles(c: Context) {
-    const parentId = c.req.query('parentId') || null;
+    const qParentId = c.req.query('parentId');
+    const parentId = (qParentId === 'null' || !qParentId) ? null : qParentId;
     const query = c.req.query('q') || null;
+
+    console.log('🔍 ListFiles Request:', { qParentId, parentIdProcessed: parentId, query });
+
     const files = await this.fileService.listFiles(parentId, query);
+    console.log(`✅ Found ${files.length} files`);
     return c.json(files);
   }
 
