@@ -52,7 +52,7 @@ export class FileController {
     return c.json(files);
   }
 
-  @Post('/mkdir')
+  @Post('/folder')
   public async createFolder(c: Context) {
     const { name, parentId } = await c.req.json();
     if (!name) return c.json({ error: 'Name is required' }, 400);
