@@ -5,8 +5,7 @@ ARG NODE_IMAGE=registry.cn-hangzhou.aliyuncs.com/fubd_own/node:20-slim
 FROM ${NODE_IMAGE} AS development
 WORKDIR /app
 COPY package*.json ./
-# 使用 cache mount 加速依赖安装
-RUN --mount=type=cache,target=/root/.npm \
+RUN npm config set registry https://registry.npmmirror.com && \ 
     npm install
 COPY . .
 EXPOSE 3001
@@ -16,8 +15,8 @@ CMD ["npm", "run", "dev"]
 FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 COPY package*.json ./
-# 使用 cache mount 并使用 ci 安装确定的版本
-RUN --mount=type=cache,target=/root/.npm \
+# 使用 使用 ci 安装确定的版本
+RUN npm config set registry https://registry.npmmirror.com && \ 
     npm ci
 COPY . .
 RUN npm run build
@@ -27,7 +26,7 @@ FROM ${NODE_IMAGE} AS production
 WORKDIR /app
 COPY package*.json ./
 # 仅安装生产依赖，并清理缓存减少镜像体积
-RUN --mount=type=cache,target=/root/.npm \
+RUN npm config set registry https://registry.npmmirror.com && \ 
     npm ci --only=production && \
     npm cache clean --force
 

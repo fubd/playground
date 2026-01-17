@@ -34,10 +34,10 @@ dev-up:
 	@echo "🚀 启动开发环境..."
 	docker compose up -d
 	@echo "✓ 开发环境已启动"
-	@echo "📍 前端 (Nginx 代理): http://localhost:26033"
-	@echo "📍 前端 (Rsbuild 监控): http://localhost:26030"
-	@echo "📍 后端 API: http://localhost:26031"
-	@echo "📍 MySQL: localhost:26032"
+	@echo "📍 前端 (Nginx 代理): http://localhost:26003"
+	@echo "📍 前端 (Rsbuild 监控): http://localhost:26000"
+	@echo "📍 后端 API: http://localhost:26001"
+	@echo "📍 MySQL: localhost:26002"
 
 dev-down:
 	@echo "🛑 停止开发环境..."
@@ -66,9 +66,9 @@ prod-up:
 	@echo "🚀 启动生产环境..."
 	docker compose -f docker compose.prod.yml up -d
 	@echo "✓ 生产环境已启动"
-	@echo "📍 Nginx (统一入口): http://localhost:26033"
-	@echo "📍 后端 API: http://localhost:26031"
-	@echo "📍 MySQL: localhost:26032"
+	@echo "📍 Nginx (统一入口): http://localhost:26003"
+	@echo "📍 后端 API: http://localhost:26001"
+	@echo "📍 MySQL: localhost:26002"
 
 prod-down:
 	@echo "🛑 停止生产环境..."

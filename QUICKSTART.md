@@ -24,9 +24,9 @@ docker compose ps
 
 等待所有服务启动完成（约 30-60 秒），然后访问：
 
-- **前端界面**: http://localhost:26030
-- **后端 API**: http://localhost:26031/api/system-info
-- **健康检查**: http://localhost:26031/health
+- **前端界面**: http://localhost:26000
+- **后端 API**: http://localhost:26001/api/system-info
+- **健康检查**: http://localhost:26001/health
 
 ### 4. 查看日志
 
@@ -62,7 +62,7 @@ make db-shell
 
 **连接信息**:
 - Host: `localhost`
-- Port: `26032`
+- Port: `26002`
 - User: `root`
 - Password: 见 `.env` 文件中的 `MYSQL_ROOT_PASSWORD`
 - Database: `server_monitor`
@@ -90,7 +90,7 @@ make prod-up
 ### 3. 访问应用
 
 通过 Nginx 统一入口访问：
-- **应用入口**: http://localhost:26033
+- **应用入口**: http://localhost:26003
 
 ---
 
@@ -108,10 +108,10 @@ make prod-up
 如果端口已被占用，修改 `.env` 文件中的端口号：
 
 ```bash
-FRONTEND_PORT=26030  # 修改为其他端口
-BACKEND_PORT=26031   # 修改为其他端口
-MYSQL_PORT=26032     # 修改为其他端口
-NGINX_PORT=26033     # 修改为其他端口
+FRONTEND_PORT=26000  # 修改为其他端口
+BACKEND_PORT=26001   # 修改为其他端口
+MYSQL_PORT=26002     # 修改为其他端口
+NGINX_PORT=26003     # 修改为其他端口
 ```
 
 ### 容器启动失败
@@ -132,7 +132,7 @@ make dev-rebuild
 
 ### 前端无法连接后端
 
-1. 检查后端是否正常运行：访问 http://localhost:26031/health
+1. 检查后端是否正常运行：访问 http://localhost:26001/health
 2. 确认前端 `.env` 中的 API URL 配置正确
 3. 检查浏览器控制台是否有 CORS 错误
 
@@ -167,7 +167,7 @@ npm run dev
 ## 🎯 下一步
 
 1. ✅ 启动开发环境
-2. ✅ 访问 http://localhost:26030 查看界面
+2. ✅ 访问 http://localhost:26000 查看界面
 3. ✅ 测试服务器信息显示是否正常
 4. ✅ 尝试数据库连接
 5. ⭐ 开始添加自定义功能！

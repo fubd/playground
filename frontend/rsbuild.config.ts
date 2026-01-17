@@ -39,13 +39,33 @@ export default defineConfig({
     },
     buildCache: true,
   },
+  html: {
+    template: './public/index.html', // 自定义 HTML
+    inject: true,
+  },
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    'react-dom/client': 'ReactDOMClient',
+    antd: 'antd',
+  },
   tools: {
-     rspack: (config, { appendPlugins, rspack }) => {
-       // 过滤 dayjs 的语言包，只保留中文
-       appendPlugins(new rspack.IgnorePlugin({
-         resourceRegExp: /^\.\/locale$/,
-         contextRegExp: /dayjs$/,
-       }));
-     },
+    rspack: (config, { appendPlugins, rspack }) => {
+      // 外部化 React/ReactDOM/antd
+      config.externals = {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+        'react-dom/client': 'ReactDOMClient',
+        antd: 'antd',
+      };
+
+      // 禁止拆分这些库
+      if (config.optimization?.splitChunks) {
+        config.optimization.splitChunks.cacheGroups = {
+          default: false,
+          vendors: false,
+        };
+      }
+    },
   },
 });
