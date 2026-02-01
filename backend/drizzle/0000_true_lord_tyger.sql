@@ -11,6 +11,40 @@ CREATE TABLE `alerts` (
 	CONSTRAINT `alerts_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
+CREATE TABLE `books` (
+	`id` bigint AUTO_INCREMENT NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`url` text NOT NULL,
+	`url_hash` varchar(32) NOT NULL,
+	`author` varchar(255),
+	`publisher` varchar(255),
+	`publish_date` varchar(50),
+	`price` int,
+	`rating` float,
+	`cover_image` text,
+	`summary` text,
+	`tag_code` varchar(100),
+	`created_at` timestamp DEFAULT (now()),
+	CONSTRAINT `books_id` PRIMARY KEY(`id`),
+	CONSTRAINT `books_url_hash_unique` UNIQUE(`url_hash`)
+);
+--> statement-breakpoint
+CREATE TABLE `categories` (
+	`id` bigint AUTO_INCREMENT NOT NULL,
+	`name` varchar(100) NOT NULL,
+	`code` varchar(100) NOT NULL,
+	`parent_id` bigint,
+	`level` int DEFAULT 1,
+	`status` enum('pending','processing','done','failed') DEFAULT 'pending',
+	`priority` int DEFAULT 0,
+	`book_count` int DEFAULT 0,
+	`last_start` int DEFAULT 0,
+	`created_at` timestamp DEFAULT (now()),
+	`updated_at` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `categories_id` PRIMARY KEY(`id`),
+	CONSTRAINT `categories_code_unique` UNIQUE(`code`)
+);
+--> statement-breakpoint
 CREATE TABLE `configurations` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`config_key` varchar(100) NOT NULL,

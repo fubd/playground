@@ -10,6 +10,11 @@ const Dock: React.FC = () => {
       path: '/'
     },
     {
+      key: '/books',
+      label: '书籍',
+      path: '/books'
+    },
+    {
       key: '/test1',
       label: '任务',
       path: '/test1'

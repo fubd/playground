@@ -50,3 +50,33 @@ export const mock = mysqlTable('mock', {
   id: int('id').primaryKey().autoincrement(),
   title: varchar('title', { length: 255 }).notNull(),
 });
+
+export const books = mysqlTable('books', {
+  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
+  title: varchar('title', { length: 255 }).notNull(),
+  url: text('url').notNull(),
+  urlHash: varchar('url_hash', { length: 32 }).notNull().unique(),
+  author: varchar('author', { length: 255 }),
+  publisher: varchar('publisher', { length: 255 }),
+  publishDate: varchar('publish_date', { length: 50 }),
+  price: int('price'),
+  rating: float('rating'),
+  coverImage: text('cover_image'),
+  summary: text('summary'),
+  tagCode: varchar('tag_code', { length: 100 }), // This will store the leaf category code
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const categories = mysqlTable('categories', {
+  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
+  name: varchar('name', { length: 100 }).notNull(),
+  code: varchar('code', { length: 100 }).notNull().unique(),
+  parentId: bigint('parent_id', { mode: 'number' }),
+  level: int('level').default(1),
+  status: mysqlEnum('status', ['pending', 'processing', 'done', 'failed']).default('pending'),
+  priority: int('priority').default(0),
+  bookCount: int('book_count').default(0),
+  lastStart: int('last_start').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});

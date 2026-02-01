@@ -20,6 +20,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.7",
     "@types/fs-extra": "^11.0.4",
+    "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
@@ -27,12 +28,16 @@
     "hono": "^4.11.3",
     "inversify": "^7.11.0",
     "mysql2": "^3.16.0",
+    "node-cron": "^3.0.3",
+    "pinyin": "^4.0.0",
     "reflect-metadata": "^0.2.2",
     "systeminformation": "^5.28.9",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/cheerio": "^0.22.35",
     "@types/node": "^25.0.3",
+    "@types/node-cron": "^3.0.11",
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.31.8",
     "nodemon": "^3.1.11",
