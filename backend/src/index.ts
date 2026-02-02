@@ -11,8 +11,6 @@ import { testDbConnection, initDatabase } from './db/connection.js';
 import { MetricsService } from './services/metrics.service.js';
 import { SystemService } from './services/system.service.js';
 import { FileService } from './services/file.service.js';
-import { CrawlerService } from './services/crawler.service.js';
-import { Scheduler } from './framework/scheduler.js';
 
 // Framework & Controllers
 import { registerControllers } from './framework/registrar.js';
@@ -21,7 +19,6 @@ import { TodoController } from './controllers/todo.controller.js';
 import { MetricsController } from './controllers/metrics.controller.js';
 import { SystemController } from './controllers/system.controller.js';
 import { FileController } from './controllers/file.controller.js';
-import { CrawlerController } from './controllers/crawler.controller.js';
 
 dotenv.config();
 
@@ -62,9 +59,7 @@ registerControllers(
     TodoController,
     FileController,
     MetricsController,
-    MetricsController,
     MockController,
-    CrawlerController,
   ],
   container
 );
@@ -105,7 +100,6 @@ testDbConnection().then(async (connected) => {
     const systemService = container.get<SystemService>(TYPES.SystemService);
     const metricsService = container.get<MetricsService>(TYPES.MetricsService);
     const fileService = container.get<FileService>(TYPES.FileService);
-    const crawlerService = container.get<CrawlerService>(TYPES.CrawlerService);
     
     // 初始化一些基础数据
     // await metricsService.clearHistory(); // Disable to preserve data across restarts
@@ -113,9 +107,19 @@ testDbConnection().then(async (connected) => {
 
     console.log('✓ Services initialized');
 
-    // 启动定时任务调度器 (Refactored to use node-cron)
-    const scheduler = container.get<Scheduler>(TYPES.Scheduler);
-    scheduler.start();
+    // 启动 10s 定时采集
+    setInterval(async () => {
+      try {
+        const info = await systemService.getSystemInfo();
+        await metricsService.saveMetric(
+          info.currentLoad.currentLoad,
+          info.memory.usedPercent
+        );
+      } catch (e) {
+        console.error('Error collecting metrics:', e);
+      }
+    }, 10000);
+    console.log('✓ Metrics collection started (10s interval)');
 
   } else {
     console.log('⚠️  Database is not available (will continue without it)');

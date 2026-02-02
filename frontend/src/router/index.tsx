@@ -5,7 +5,6 @@ import Dock from '../components/Dock';
 
 // --- 关键点 1: 使用 lazy 函数进行动态导入 ---
 const Dashboard = lazy(() => import('../pages/Dashboard'));
-const Books = lazy(() => import('../pages/Books'));
 const Todo = lazy(() => import('../pages/Todo'));
 const Experiment = lazy(() => import('../pages/Experiment'));
 
@@ -26,7 +25,6 @@ const AppRouter: React.FC = () => {
         <Suspense fallback={PageLoading}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/books" element={<Books />} />
             <Route path="/test1" element={<Todo />} />
             <Route path="/test2" element={<Experiment />} />
             <Route path="*" element={<Navigate to="/" replace />} />

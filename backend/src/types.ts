@@ -5,13 +5,10 @@ export const TYPES = {
   TodoService: Symbol.for('TodoService'),
   FileService: Symbol.for('FileService'),
   MockService: Symbol.for('MockService'),
-  CrawlerService: Symbol.for('CrawlerService'),
-  Scheduler: Symbol.for('Scheduler'),
   // Controllers
   MockController: Symbol.for('MockController'),
   TodoController: Symbol.for('TodoController'),
   FileController: Symbol.for('FileController'),
   MetricsController: Symbol.for('MetricsController'),
   SystemController: Symbol.for('SystemController'),
-  CrawlerController: Symbol.for('CrawlerController'),
 };
